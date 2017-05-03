@@ -77,7 +77,7 @@ var livequeryEnhancer = exports.livequeryEnhancer = function livequeryEnhancer()
   };
 }
 
-var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, result, debounceTime = 0) {
+var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
   let field0 = fieldArray[0];
@@ -194,9 +194,9 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
     })
     .debounceTime(debounceTime)
     .subscribe({
-      next: (favoriteList) => {
+      next: (val) => {
         //console.log(`next:`, favoriteList);
-        result(favoriteList);
+        resultFun(val);
       }
     });
 

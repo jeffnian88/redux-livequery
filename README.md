@@ -15,7 +15,7 @@ Configuring The Store
 import { livequeryEnhancer } from 'redux-livequery';
 const enhancer = compose(
   autoRehydrate(),
-  appliedMiddleware,
+  applyMiddleware(....),
   livequeryEnhancer(),
   window.devToolsExtension ? window.devToolsExtension() : f => f // add support for Redux dev tools,
 );
@@ -27,7 +27,7 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 import the module in your any component
 
-rxQueryBasedOnObjectKeys([selectors], [fields], resultFunc)
+API rxQueryBasedOnObjectKeys([selectors], [fields], resultFunc, debounceTime)
 
 ##### selectors: choose the state you want to observe
 ##### fields: Give each selector a field name

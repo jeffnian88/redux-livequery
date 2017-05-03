@@ -13,13 +13,12 @@
     "immutability-helper": "^2.1.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "rxjs": "^5.0.0"
+    "babel-cli": "^6.24.1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jeffnian88"
+    "url": "https://github.com/jeffnian88/redux-livequery"
   },
-  "author": "JeffNian",
+  "author": "Jeff Nian",
   "license": "ISC"
 }
