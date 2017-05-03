@@ -44,18 +44,18 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
     //state.profile={storeId1: ObjectA, storeId2: ObjectB, storeId3:ObjectC}
     let field0 = 'favor';
     let field1 = 'profile';
-    let unsub = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (favoriteList) => {
+    // equals SQL query:
+    // SELECT * FROM profile RIGHT JOIN favorite ON profile.id=favorite.id;
+    let unsub = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (result) => {
       console.log(`next:`, favoriteList);
 
-      // favoriteList would be [0:{favor:{Object1}, key:storeId1, {profile:{ObjectA}}},
-      //                        1:{favor:{Object2}, key:storeId2, {profile:{ObjectB}}}]
-      // just like SQL inner join.
-      // do whatever you want
+      // result would be [{key:storeId1, favor:{Object1}, {profile:{ObjectA}}},
+      //                  {key:storeId2, favor:{Object2}, {profile:{ObjectB}}}]
+      // just like SQL right join.
+      // Below here you can do whatever you want
       // this.setState({favorList:favoriteList});
 
-      // favoriteList will be composed by favorite and profile state
       // whenever state.favorite or state.profile change, the result function would be invoked
-
     });
 
     // after a while, unsubscribe the livequery
