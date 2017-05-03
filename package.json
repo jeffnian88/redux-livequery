@@ -1,0 +1,25 @@
+{
+  "name": "redux-livequery",
+  "version": "0.1.14",
+  "description": "Provide SQL-like LiveQuery for redux state container",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "peerDependencies": {
+    "redux": "3.*",
+    "rxjs": "^5.0.0",
+    "immutability-helper": "^2.1.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "rxjs": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jeffnian88"
+  },
+  "author": "JeffNian",
+  "license": "ISC"
+}
