@@ -1,8 +1,8 @@
 "use strict";
+import update from 'immutability-helper';
 var store = void 0;
 var Rx = require('rxjs/Rx');
 
-import update from 'immutability-helper';
 function makeCheckFuncWithSelector(selector, cb) {
   let currentValue = null;
   let previousValue = null;
@@ -64,7 +64,6 @@ function unsubscribeRxQuery(queryID) {
   }
   return false;
 }
-//export function livequeryEnhancer() {
 var livequeryEnhancer = exports.livequeryEnhancer = function livequeryEnhancer() {
   return function (createStore) {
     return function (reducer, preloadedState, enhancer) {

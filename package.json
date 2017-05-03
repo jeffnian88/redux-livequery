@@ -1,6 +1,6 @@
 {
   "name": "redux-livequery",
-  "version": "0.1.14",
+  "version": "0.1.18",
   "description": "Provide SQL-like LiveQuery for redux state container",
   "main": "lib/index.js",
   "scripts": {
