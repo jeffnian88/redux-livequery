@@ -8,9 +8,8 @@ function makeCheckFuncWithSelector(selector, cb) {
   let previousValue = null;
 
   // Try to get first value since the checkFun only be invoked whenever state tree change.
-  previousValue = currentValue;
   currentValue = selector(store.getState());
-  if (previousValue !== currentValue) {
+  if (currentValue) {
     cb(currentValue, previousValue);
   }
 
@@ -29,15 +28,16 @@ var createRxStateBySelector = exports.createRxStateBySelector = function createR
   return Rx.Observable.create((subscriber) => {
     //console.log('Rx.Observable.create():', field, key);
     let func = makeCheckFuncWithSelector(selector, (nextValue, lastValue) => {
-      let val = { selector, nextValue, lastValue, key, field };
+      let val = { nextValue, lastValue, key, field };
       //console.log(`trigger next =>`, val);
-      subscriber.next({ selector, nextValue, lastValue, key, field });
+      subscriber.next(val);
     });
 
     let unsub = store.subscribe(func);
     let rxStateID = `${field}_${key}_${queryID}`;
     //console.log(`subscribe():${rxStateID}`);
     queryIDMapRxStates[queryID] = Object.assign({}, queryIDMapRxStates[queryID], { [rxStateID]: { subscriber, unsub } });
+    //console.log(`queryIDMapRxStates[${queryID}]:`, queryIDMapRxStates[queryID]);
   });
 };
 function destroyRxStateByIndex(field, key, queryID) {
@@ -139,7 +139,6 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
         //console.log('addedUidArray:', addedUidArray);
 
         deletedUidArray.forEach((uid) => {
-          //destroyRxStateByIndex(uid);
           let index = list.findIndex((each) => uid === each.key);
           //console.log(`${uid} delete index:`, index);
           if (index >= 0) {
@@ -186,6 +185,7 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
           //console.log("modify index:", index);
           list = update(list, { [index]: { [field]: { $set: nextValue } } });
         } else {
+          // shouldn't happen?
           list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key: uid })] });
         }
       }

@@ -1,8 +1,11 @@
 Provide SQL-like LiveQuery on redux state container
 
+
+[![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
+
 ## Install
 
-This has peer dependencies of `rxjs@5.x.x` and `redux`, which will have to be installed as well.
+This has peer dependencies of `rxjs@5.x.x`, `redux` and `immutability-helper`, which will have to be installed as well.
 
 ```bash
 npm install --save redux-livequery
@@ -27,11 +30,18 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 import the module in your any component
 
-API rxQueryBasedOnObjectKeys([selectors], [fields], resultFunc, debounceTime)
+```js
+import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
+```
+
+API
+### `rxQueryBasedOnObjectKeys([selectors], [fields], resultFunc, debounceTime)`
 
 ##### selectors: choose the state you want to observe
-##### fields: Give each selector a field name
+##### fields: give each selector a field name
 ##### resultFunc: whenever any state you observe change, the result function would be invoked and result value would be composed like sql inner join.
+
+## Example
 
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
@@ -45,14 +55,14 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
     let field0 = 'favor';
     let field1 = 'profile';
     // equals SQL query:
-    // SELECT * FROM profile RIGHT JOIN favorite ON profile.id=favorite.id;
+    // SELECT * FROM profile RIGHT/LEFT JOIN favorite ON profile.id=favorite.id;
     let unsub = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (result) => {
       console.log(`next:`, favoriteList);
 
-      // result would be [{key:storeId1, favor:{Object1}, {profile:{ObjectA}}},
-      //                  {key:storeId2, favor:{Object2}, {profile:{ObjectB}}}]
+      // result would be [{key:storeId1, favor:{Object1}, profile:{ObjectA}},
+      //                  {key:storeId2, favor:{Object2}, profile:{ObjectB}}]
       // just like SQL right join.
-      // Below here you can do whatever you want
+      // Below here you can do whatever you want like:
       // this.setState({favorList:favoriteList});
 
       // whenever state.favorite or state.profile change, the result function would be invoked
