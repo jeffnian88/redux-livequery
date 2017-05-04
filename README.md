@@ -34,14 +34,12 @@ import the module in your any component
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 ```
 
-API
+### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 
-### `rxQueryBasedOnObjectKeys([selectors], [fields], resultFunc, debounceTime)`
-
-##### selectors: choose the state you want to observe
-##### fields: give each selector a field name
-##### resultFunc: whenever any state you observe change, the result function would be invoked and result value would be composed like sql inner join.
-##### debounceTime(default: 0 ms): time(ms) to debounce the resultFunc's trigger
+##### selectorArray: \<Array> choose the state you want to observe
+##### fieldArray: \<Array> give each selector a field name
+##### resultFunc: \<Function> (function(result) {}) whenever any state you observe change, the result function would be invoked and result value would be composed like sql inner join.
+##### debounceTime: \<number> (Default: 0) time(ms) to debounce the trigger of resultFunc
 
 ## Example
 
