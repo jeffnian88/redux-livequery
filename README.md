@@ -57,6 +57,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
     // equals SQL query:
     // SELECT * FROM profile RIGHT/LEFT JOIN favorite ON profile.id=favorite.id;
     let unsub = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (result) => {
+      let favoriteList = result;
       console.log(`next:`, favoriteList);
 
       // result would be [{key:storeId1, favor:{Object1}, profile:{ObjectA}},
