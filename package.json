@@ -1,6 +1,6 @@
 {
   "name": "redux-livequery",
-  "version": "0.1.20-rc.3",
+  "version": "0.1.20-rc.5",
   "description": "Provide SQL-like LiveQuery for redux state container",
   "main": "lib/cjs/index.js",
   "scripts": {
@@ -36,5 +36,11 @@
     "Redux",
     "redux-livequery"
   ],
+  "files": [
+    "dist",
+    "lib",
+    "README.md"
+  ],
+
   "license": "MIT"
 }
