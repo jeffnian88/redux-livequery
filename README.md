@@ -5,9 +5,9 @@ Provide LiveQuery to redux state container
 
 ## Motivation
 
-Redux state container give a good way to manage the state for React apps, but it lacks query/aggregation operation to compose multiple state into to the single result value you care about.
+Redux state container give a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you care about from multiple redux state.
 
-Redux-livequery can provide a query operation to group values from multiple redux state together. It also laverages the state subscribe API of Redux and RxJS to give us live feature. It only subscribes the state you need to obserable to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. 
+Redux-livequery can provide a query operation to group values from multiple redux state together. It also laverages the redux state subscribe API and RxJS to give us live feature. It only subscribes the state you need to obserable to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. 
 
 ## Install
 
@@ -34,7 +34,7 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 ## Usage
 
-import the module in your any component
+import the module in any react component
 
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
@@ -44,9 +44,9 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 #### Arguments
 
-##### 1. selectorArray (Array): Choose the state you want to observe
+##### 1. selectorArray (Array): Choose the state you want to observe, the first selector is to select the Object that has the child key.
 ##### 2. fieldArray (Array): Give each selector a field name
-##### 3. resultFunc (Function):  The callback to be invoked whenever any state you observe change, the result value would be composed like sql join operation.
+##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
@@ -66,22 +66,25 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
     //state.profile={storeId1: ObjectA, storeId2: ObjectB, storeId3:ObjectC}
     let field0 = 'favor';
     let field1 = 'profile';
-    // equals SQL query:
-    // SELECT * FROM profile RIGHT/LEFT JOIN favorite ON profile.id=favorite.id;
-    let unsub = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (result) => {
+    this.unsubscribe = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (result) => {
+      // equals SQL query:
+      // SELECT * FROM profile RIGHT/LEFT JOIN favorite ON profile.id=favorite.id;
+
       let favoriteList = result;
       console.log(`next:`, favoriteList);
 
-      // result would be [{key:storeId1, favor:{Object1}, profile:{ObjectA}},
+      // result value would be [{key:storeId1, favor:{Object1}, profile:{ObjectA}},
       //                  {key:storeId2, favor:{Object2}, profile:{ObjectB}}]
       // just like SQL right join.
-      // Below here you can do whatever you want like:
+      // Below here you can do whatever you want:
+      // for example
       // this.setState({favorList:favoriteList});
 
-      // whenever state.favorite or state.profile change, the result function would be invoked
-    });
+      // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
 
-    // after a while, unsubscribe the livequery
-    unsub();
+      
+      // after a while, unsubscribe the livequery
+      this.unsubscribe();
+    });
   }
 ```
