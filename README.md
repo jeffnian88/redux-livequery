@@ -1,4 +1,4 @@
-Provide SQL-like LiveQuery on redux state container
+Provide LiveQuery to redux state container
 
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
