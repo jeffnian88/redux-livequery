@@ -44,10 +44,10 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 #### Arguments
 
-##### selectorArray (Array): Choose the state you want to observe
-##### fieldArray (Array): Give each selector a field name
-##### resultFunc (Function):  The callback to be invoked whenever any state you observe change, the result value would be composed like sql join operation.
-##### debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+##### 1. selectorArray (Array): Choose the state you want to observe
+##### 2. fieldArray (Array): Give each selector a field name
+##### 3. resultFunc (Function):  The callback to be invoked whenever any state you observe change, the result value would be composed like sql join operation.
+##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
 
