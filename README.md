@@ -2,6 +2,11 @@ Provide LiveQuery to redux state container
 
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
+## Motivation
+
+Redux state container give a good way to manage the state for React apps, but it lacks query/aggregation operation to compose multiple state into to the single result value you care about.
+
+Redux-livequery can provide a query operation to group values from multiple redux state together. It also laverages the state subscribe API of Redux and RxJS to give us live feature. It only subscribes the state you need to obserable to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. 
 
 ## Install
 
