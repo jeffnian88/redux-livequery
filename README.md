@@ -2,6 +2,7 @@ Provide LiveQuery to redux state container
 
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
+
 ## Motivation
 
 Redux state container give a good way to manage the state for React apps, but it lacks query/aggregation operation to compose multiple state into to the single result value you care about.
@@ -41,10 +42,16 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 ### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 
-##### selectorArray: \<Array> choose the state you want to observe
-##### fieldArray: \<Array> give each selector a field name
-##### resultFunc: \<Function> (function(result) {}) whenever any state you observe change, the result function would be invoked and result value would be composed like sql inner join.
-##### debounceTime: \<number> (Default: 0) time(ms) to debounce the trigger of resultFunc
+#### Arguments
+
+##### selectorArray (Array): Choose the state you want to observe
+##### fieldArray (Array): Give each selector a field name
+##### resultFunc (Function):  The callback to be invoked whenever any state you observe change, the result value would be composed like sql join operation.
+##### debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+
+#### Returns
+
+##### (Function): A function that unsubscribes the live query.
 
 ## Example
 
