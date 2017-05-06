@@ -81,7 +81,7 @@ The resultFunc would be inboked only on the condition intersection set exist (or
 
 
 
-## Example
+## Example rxQueryBasedOnObjectKeys API
 
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
@@ -118,6 +118,8 @@ NEW API: 2017-5-6
     });
   }
 ```
+
+## Example rxQueryInnerJoin API
 
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';
