@@ -36,13 +36,10 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 ## Usage
 
-import the module in any react component
-
+### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 ```
-
-### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 
 #### Arguments
 
@@ -55,12 +52,10 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 ##### (Function): A function that unsubscribes the live query.
 
-
+### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
 ```
-
-### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
 
 This API will reactively get the intersection of the key set by scaning Object selected by each selector.
 
@@ -77,11 +72,11 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 ##### (Function): A function that unsubscribes the live query.
 
+
+### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
 import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
 ```
-
-### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
 
 This API will give you simple select operation.
 
