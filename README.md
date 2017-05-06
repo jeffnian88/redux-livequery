@@ -77,10 +77,29 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 ##### (Function): A function that unsubscribes the live query.
 
+```js
+import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
+```
+
+### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
+
+This API will give you simple select operation.
+
+#### Arguments
+
+##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object or Array.
+##### 2. fieldArray (Array): Give each selector a field name
+##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
+##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+
+#### Returns
+
+##### (Function): A function that unsubscribes the live query.
 
 
 
-## Example rxQueryBasedOnObjectKeys API
+
+## Example for rxQueryBasedOnObjectKeys API
 
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
@@ -117,7 +136,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
   }
 ```
 
-## Example rxQueryInnerJoin API
+## Example for rxQueryInnerJoin API
 
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';
@@ -145,6 +164,43 @@ import { rxQueryInnerJoin } from 'redux-livequery';
       // dispatch({type:'ACTION_NAME', payload:favoriteList}); // set redux state
 
       // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
+
+      // after a while, unsubscribe the livequery
+      this.unsubscribe();
+    });
+  }
+```
+
+## Example for rxQuerySimple API
+
+```js
+import { rxQuerySimple } from 'redux-livequery';
+...
+
+  constructor(){
+    let selector0 = (state) => state.favorite;
+    let selector1 = (state) => state.profile;
+    //state.favorite={storeId1: Object1, storeId2: Object2},
+    //state.profile={storeId2: Object4, storeId3:Object5}
+    let field0 = 'favor'; 
+    let field1 = 'profile';
+    this.unsubscribe = rxQueryInnerJoin([selector0, selector1], [field0, field1], (result) => {
+      // equals SQL query:
+      // SELECT * FROM profile
+      // SELECT * FROM favorite
+
+      console.log(`result:`, result);
+
+      // result value would be {profile:{storeId2: Object4, storeId3:Object5}
+      //                        favorite:{storeId1: Object1, storeId2: Object2}}
+
+      // Below here you can do whatever you want, for example
+
+      // this.setState({});     //set local state
+      // or
+      // dispatch({});          // set redux state
+
+      // whenever state.favorite or state.profile change, the result function would be invoked
 
       // after a while, unsubscribe the livequery
       this.unsubscribe();

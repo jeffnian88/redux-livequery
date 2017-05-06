@@ -342,3 +342,31 @@ function getRelObjectKeys(nextValue = {}, lastValue = {}) {
   //console.log(`getRelObjectKeys():`, { deletedObjectKeys, addedObjectkeys, andObjectKeys });
   return { deletedObjectKeys, addedObjectkeys, andObjectKeys };
 }
+
+var rxQuerySimple = exports.rxQuerySimple = function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+  // sanity-check
+  let queryID = Date.now();
+  let unsub = () => unsubscribeRxQuery(queryID);
+
+  let resultObject = {};
+
+  let rootObserable = [];
+  for (let i = 0; i < selectorArray.length; i++) {
+    rootObserable.push(createRxStateBySelector(selectorArray[i], fieldArray[i], i, queryID));
+  }
+  Rx.Observable.merge(...rootObserable)
+    .map((val) => {
+      //console.log("map() val:", val);
+      let { nextValue, lastValue, field, key } = val;
+      resultObject = update(resultObject, { [field]: { $set: nextValue } });
+      return resultObject;
+    })
+    .debounceTime(debounceTime)
+    .subscribe({
+      next: (val) => {
+        resultFun(val);
+      }
+    });
+
+  return unsub;
+};
