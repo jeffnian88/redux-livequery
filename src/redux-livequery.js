@@ -95,27 +95,16 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
       let passObserable = Rx.Observable.of(val);
       arrayObserable.push(passObserable);
 
-
-      let deletedUidArray = [];
-      if (lastValue) {
-        deletedUidArray = Object.keys(lastValue).filter((uid) => (!(nextValue && (uid in nextValue))));
-      }
-      //console.log('deletedUidArray:', deletedUidArray);
-      let addedUidArray = [];
-      if (nextValue) {
-        addedUidArray = Object.keys(nextValue).filter((uid) => (!(lastValue && (uid in lastValue))));
-      }
-      //console.log('addedUidArray:', addedUidArray);
-
-      deletedUidArray.forEach((uid) => {
+      let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+      Object.keys(deletedObjectKeys).forEach((key) => {
         for (let i = 1; i < fieldArray.length; i++) {
-          destroyRxStateByIndex(fieldArray[i], uid, queryID);
+          destroyRxStateByIndex(fieldArray[i], key, queryID);
         }
       });
 
-      addedUidArray.forEach((uid) => {
+      Object.keys(addedObjectkeys).forEach((key) => {
         for (let i = 1; i < fieldArray.length; i++) {
-          let obserable = createRxStateBySelector(newSelectorArray[i](uid), fieldArray[i], uid, queryID);
+          let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
           arrayObserable.push(obserable);
         }
       });
@@ -127,67 +116,52 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
 
       if (field === field0) {
 
-        let deletedUidArray = [];
-        if (lastValue) {
-          deletedUidArray = Object.keys(lastValue).filter((uid) => (!(uid in nextValue)));
-        }
-        //console.log('deletedUidArray:', deletedUidArray);
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
 
-        let addedUidArray = [];
-        if (nextValue) {
-          addedUidArray = Object.keys(nextValue).filter((uid) => (!(lastValue && (uid in lastValue))));
-        }
-        //console.log('addedUidArray:', addedUidArray);
-
-        deletedUidArray.forEach((uid) => {
-          let index = list.findIndex((each) => uid === each.key);
-          //console.log(`${uid} delete index:`, index);
+        Object.keys(deletedObjectKeys).forEach((key) => {
+          let index = list.findIndex((each) => key === each.key);
+          //console.log(`${key} delete index:`, index);
           if (index >= 0) {
             // delete element
             list = update(list, { $splice: [[index, 1]] });
-            //console.log('del:', uid, index, list);
+            //console.log('del:', key, index, list);
           } else {
             console.error("Impossible!!");
           }
         });
-        addedUidArray.forEach((uid) => {
-          let index = list.findIndex((each) => uid === each.key);
-          //console.log(`${uid} add index:`, index);
+        Object.keys(addedObjectkeys).forEach((key) => {
+          let index = list.findIndex((each) => key === each.key);
+          //console.log(`${key} add index:`, index);
           if (index >= 0) {
             console.error("Impossible!!");
           } else {
             // add element
-            list = update(list, { $push: [Object.assign({}, { [field0]: nextValue[uid] }, { key: uid })] });
+            list = update(list, { $push: [Object.assign({}, { [field0]: nextValue[key] }, { key: key })] });
           }
         });
 
-        if (nextValue) {
-          let andUidArray = Object.keys(nextValue).filter((uid) => (lastValue && (uid in lastValue)));
-          andUidArray.forEach((uid) => {
-            if (nextValue[uid] !== lastValue[uid]) {
-
-              let index = list.findIndex((each) => uid === each.key);
-              if (index >= 0) {
-                // modify element
-                //console.log("modify index:", index);
-                list = update(list, { [index]: { [field0]: { $set: nextValue[uid] } } });
-              } else {
-                console.error("Impossible!!");
-              }
+        Object.keys(andObjectKeys).forEach((key) => {
+          if (nextValue[key] !== lastValue[key]) {
+            let index = list.findIndex((each) => key === each.key);
+            if (index >= 0) {
+              // modify element
+              //console.log("modify index:", index);
+              list = update(list, { [index]: { [field0]: { $set: nextValue[key] } } });
+            } else {
+              console.error("Impossible!!");
             }
-          });
-        }
+          }
+        });
       } else {
         // field is other 
-        let uid = key;
-        let index = list.findIndex((each) => uid === each.key);
+        let index = list.findIndex((each) => key === each.key);
         if (index >= 0) {
           // modify element
           //console.log("modify index:", index);
           list = update(list, { [index]: { [field]: { $set: nextValue } } });
         } else {
           // shouldn't happen?
-          list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key: uid })] });
+          list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key })] });
         }
       }
       return list;
