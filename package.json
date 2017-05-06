@@ -1,6 +1,6 @@
 {
   "name": "redux-livequery",
-  "version": "0.2.6",
+  "version": "0.2.6-rc.1",
   "description": "Provide LiveQuery to redux state container",
   "main": "lib/cjs/index.js",
   "scripts": {
@@ -30,17 +30,27 @@
     "type": "git",
     "url": "https://github.com/jeffnian88/redux-livequery"
   },
+  "contributors": [
+    {
+      "name": "Jeff Nian",
+      "email": "jeffgo0709@gmail.com"
+    }
+  ],
   "author": "Jeff Nian",
   "keywords": [
     "Rx",
     "Redux",
     "redux-livequery",
-    "Reactive Query"
+    "Reactive Query",
+    "SQL-Like Query"
   ],
   "files": [
     "dist",
     "lib",
     "README.md"
   ],
+  "bugs": {
+    "url": "https://github.com/jeffnian88/redux-livequery/issues"
+  },
   "license": "MIT"
 }
