@@ -58,6 +58,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';
+New API: 2017-5-6
 ```
 
 ### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
