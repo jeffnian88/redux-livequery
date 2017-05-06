@@ -184,7 +184,7 @@ import { rxQuerySimple } from 'redux-livequery';
     //state.profile={storeId2: Object4, storeId3:Object5}
     let field0 = 'favor'; 
     let field1 = 'profile';
-    this.unsubscribe = rxQueryInnerJoin([selector0, selector1], [field0, field1], (result) => {
+    this.unsubscribe = rxQuerySimple([selector0, selector1], [field0, field1], (result) => {
       // equals SQL query:
       // SELECT * FROM profile
       // SELECT * FROM favorite
