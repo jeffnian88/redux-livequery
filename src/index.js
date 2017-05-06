@@ -1,2 +1,2 @@
-export { rxQueryBasedOnObjectKeys } from './redux-livequery';
+export { rxQueryBasedOnObjectKeys, rxQueryInnerJoin } from './redux-livequery';
 export { livequeryEnhancer } from './redux-livequery';

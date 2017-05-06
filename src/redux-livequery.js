@@ -28,7 +28,7 @@ var createRxStateBySelector = exports.createRxStateBySelector = function createR
   return Rx.Observable.create((subscriber) => {
     //console.log('Rx.Observable.create():', field, key);
     let func = makeCheckFuncWithSelector(selector, (nextValue, lastValue) => {
-      let val = { nextValue, lastValue, key, field };
+      let val = { nextValue, lastValue, field, key };
       //console.log(`trigger next =>`, val);
       subscriber.next(val);
     });
@@ -101,17 +101,18 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
         deletedUidArray = Object.keys(lastValue).filter((uid) => (!(nextValue && (uid in nextValue))));
       }
       //console.log('deletedUidArray:', deletedUidArray);
+      let addedUidArray = [];
+      if (nextValue) {
+        addedUidArray = Object.keys(nextValue).filter((uid) => (!(lastValue && (uid in lastValue))));
+      }
+      //console.log('addedUidArray:', addedUidArray);
+
       deletedUidArray.forEach((uid) => {
         for (let i = 1; i < fieldArray.length; i++) {
           destroyRxStateByIndex(fieldArray[i], uid, queryID);
         }
       });
 
-      let addedUidArray = [];
-      if (nextValue) {
-        addedUidArray = Object.keys(nextValue).filter((uid) => (!(lastValue && (uid in lastValue))));
-      }
-      //console.log('addedUidArray:', addedUidArray);
       addedUidArray.forEach((uid) => {
         for (let i = 1; i < fieldArray.length; i++) {
           let obserable = createRxStateBySelector(newSelectorArray[i](uid), fieldArray[i], uid, queryID);
@@ -194,10 +195,150 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
-        //console.log(`next:`, favoriteList);
         resultFun(val);
       }
     });
 
   return unsub;
 };
+var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+  // sanity-check
+  let queryID = Date.now();
+  let unsub = () => unsubscribeRxQuery(queryID);
+
+  let newSelectorArray = [];
+  for (let i = 0; i < selectorArray.length; i++) {
+    newSelectorArray[i] = (uid) => (state) => selectorArray[i](state)[uid];
+  }
+
+
+  let list = [];
+  let indexMapObjectKeys = {};
+  const lenSelector = selectorArray.length;
+  let lastInterObjectKeys = [];
+
+  let rootObserable = [];
+  for (let i = 0; i < selectorArray.length; i++) {
+    let fieldName = fieldArray[i];
+    rootObserable.push(createRxStateBySelector(selectorArray[i], `${fieldName}_ObjectKeysChange`, i, queryID));
+  }
+  Rx.Observable.merge(...rootObserable)
+    .mergeMap((val) => {
+      //console.log("mergeMap() val:", val);
+      let { lastValue, nextValue, field, key } = val;
+      if (nextValue) {
+        let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
+        ) {
+          //console.log(`${field}: NO change checked.`);
+          return Rx.Observable.empty();
+        } else {
+          indexMapObjectKeys[key] = nextValue;
+        }
+      } else {
+        if (indexMapObjectKeys[key]) {
+          delete indexMapObjectKeys[key];
+        }
+      }
+
+      let arrayObserable = [Rx.Observable.empty()];
+      // Check if all selector is set.
+      if (lenSelector === Object.keys(indexMapObjectKeys).length) {
+        let nextInterObjectKeys = indexMapObjectKeys[0];
+
+        //TODO: improve here
+        for (let i = 1; i < lenSelector; i++) {
+          let { andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, indexMapObjectKeys[i]);
+          nextInterObjectKeys = andObjectKeys;
+        }
+        //console.log("nextInterObjectKeys:", nextInterObjectKeys, ", lastInterObjectKeys:", lastInterObjectKeys);
+
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, lastInterObjectKeys);
+
+        if (Object.keys(deletedObjectKeys).length !== 0) {
+          arrayObserable.push(Rx.Observable.of({
+            nextValue: nextInterObjectKeys,
+            lastValue: lastInterObjectKeys,
+            field: `interObjectKeysChange_${queryID}`,
+            key
+          }));
+        }
+        Object.keys(deletedObjectKeys).forEach((key) => {
+          for (let i = 0; i < lenSelector; i++) {
+            destroyRxStateByIndex(fieldArray[i], key, queryID);
+          }
+        });
+        Object.keys(addedObjectkeys).forEach((key) => {
+          for (let i = 0; i < lenSelector; i++) {
+            let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
+            arrayObserable.push(obserable);
+          }
+        });
+        lastInterObjectKeys = nextInterObjectKeys;
+      }
+      return Rx.Observable.merge(...arrayObserable);
+    })
+    .map((val) => {
+      //console.log("map() val:", val);
+      let { nextValue, lastValue, field, key } = val;
+      if (field === `interObjectKeysChange_${queryID}`) {
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+
+        Object.keys(deletedObjectKeys).forEach((key) => {
+          let index = list.findIndex((each) => key === each.key);
+          //console.log(`${key} delete index:`, index);
+          if (index >= 0) {
+            // delete element
+            list = update(list, { $splice: [[index, 1]] });
+            //console.log('del:', key, index, list);
+          } else {
+            console.error("Impossible!!");
+          }
+        });
+
+      } else {
+        // field is other 
+        let index = list.findIndex((each) => key === each.key);
+        if (index >= 0) {
+          // modify element
+          //console.log("modify index:", index);
+          list = update(list, { [index]: { [field]: { $set: nextValue } } });
+        } else {
+          if (key in lastInterObjectKeys) {
+            list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key })] });
+          }
+        }
+      }
+      return list;
+    })
+    .debounceTime(debounceTime)
+    .subscribe({
+      next: (val) => {
+        resultFun(val);
+      }
+    });
+
+  return unsub;
+}
+
+function getRelObjectKeys(nextValue = {}, lastValue = {}) {
+  let deletedObjectKeys = {};
+  let addedObjectkeys = {};
+  let andObjectKeys = {};
+  if (lastValue) {
+    Object.keys(lastValue).filter((key) => (!(nextValue && (key in nextValue)))).map((key) => {
+      deletedObjectKeys[key] = true;
+    });
+  }
+  if (nextValue) {
+    Object.keys(nextValue).filter((key) => (!(lastValue && (key in lastValue)))).map((key) => {
+      addedObjectkeys[key] = true;
+    });
+  }
+  Object.keys(nextValue).filter((key) => (lastValue && (key in lastValue))).map((key) => {
+    andObjectKeys[key] = true;
+  });
+  //console.log(`getRelObjectKeys():`, { deletedObjectKeys, addedObjectkeys, andObjectKeys });
+  return { deletedObjectKeys, addedObjectkeys, andObjectKeys };
+}
