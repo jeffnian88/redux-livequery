@@ -46,7 +46,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 #### Arguments
 
-##### 1. selectorArray (Array): Choose the state you want to observe, the first selector is to select the Object that has the child key.
+##### 1. selectorArray (Array): Choose the state you want to observe, the child's key of Objec selected by the first selector is primary key set.
 ##### 2. fieldArray (Array): Give each selector a field name
 ##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
@@ -57,15 +57,14 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 
 ```js
-import { rxQueryInnerJoin } from 'redux-livequery';
-New API: 2017-5-6
+import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
 ```
 
 ### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
 
-This API will scan the intersection of all Object's child key that selected by selector.
+This API will reactively get the intersection of the key set by scaning Object selected by each selector.
 
-The resultFunc would be inboked only on the condition intersection set exist (or the size of intersection set not zero) and the state you would like to observe changes.
+The resultFunc would be invoked only on the condition intersection set is not empty (or the size of intersection is not zero) and the state you would like to observe changes.
 
 #### Arguments
 
@@ -85,7 +84,6 @@ The resultFunc would be inboked only on the condition intersection set exist (or
 
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
-NEW API: 2017-5-6
 ...
 
   constructor(){
@@ -123,7 +121,6 @@ NEW API: 2017-5-6
 
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';
-NEW API: 2017-5-6
 ...
 
   constructor(){
