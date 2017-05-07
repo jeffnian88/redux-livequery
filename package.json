@@ -1,6 +1,6 @@
 {
   "name": "redux-livequery",
-  "version": "0.2.6-rc.1",
+  "version": "0.2.6-rc.4",
   "description": "Provide LiveQuery to redux state container",
   "main": "lib/cjs/index.js",
   "scripts": {
@@ -42,7 +42,8 @@
     "Redux",
     "redux-livequery",
     "Reactive Query",
-    "SQL-Like Query"
+    "SQL-Like Query",
+    "reselect"
   ],
   "files": [
     "dist",

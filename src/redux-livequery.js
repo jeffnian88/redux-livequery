@@ -23,7 +23,7 @@ function makeCheckFuncWithSelector(selector, cb) {
 }
 
 let queryIDMapRxStates = {};
-var createRxStateBySelector = exports.createRxStateBySelector = function createRxStateBySelector(selector, field, key, queryID) {
+export function createRxStateBySelector(selector, field, key, queryID) {
   //console.log('createRxStateBySelector():', field, key);
   return Rx.Observable.create((subscriber) => {
     //console.log('Rx.Observable.create():', field, key);
@@ -48,6 +48,8 @@ function destroyRxStateByIndex(field, key, queryID) {
     subscriber.complete();
     unsub();
     delete queryIDMapRxStates[queryID][rxStateID];
+  } else {
+    console.error("Shouldn't happen.");
   }
 }
 function unsubscribeRxQuery(queryID) {
@@ -64,7 +66,7 @@ function unsubscribeRxQuery(queryID) {
   }
   return false;
 }
-var livequeryEnhancer = exports.livequeryEnhancer = function livequeryEnhancer() {
+export function livequeryEnhancer() {
   return function (createStore) {
     return function (reducer, preloadedState, enhancer) {
       store = createStore(reducer, preloadedState, enhancer);
@@ -76,7 +78,10 @@ var livequeryEnhancer = exports.livequeryEnhancer = function livequeryEnhancer()
   };
 }
 
-var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+  // TODO
+  // sanity-check
+
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
   let field0 = fieldArray[0];
@@ -176,7 +181,9 @@ var rxQueryBasedOnObjectKeys = exports.rxQueryBasedOnObjectKeys = function rxQue
   return unsub;
 };
 var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+  // TODO
   // sanity-check
+
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
 
@@ -317,7 +324,8 @@ function getRelObjectKeys(nextValue = {}, lastValue = {}) {
   return { deletedObjectKeys, addedObjectkeys, andObjectKeys };
 }
 
-var rxQuerySimple = exports.rxQuerySimple = function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+  // TODO
   // sanity-check
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
@@ -343,4 +351,4 @@ var rxQuerySimple = exports.rxQuerySimple = function rxQuerySimple(selectorArray
     });
 
   return unsub;
-};
+}
