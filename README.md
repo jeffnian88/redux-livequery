@@ -36,13 +36,10 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 ## Usage
 
-import the module in any react component
-
+### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 ```
-
-### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 
 #### Arguments
 
@@ -55,12 +52,10 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 ##### (Function): A function that unsubscribes the live query.
 
-
+### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
 ```
-
-### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
 
 This API will reactively get the intersection of the key set by scaning Object selected by each selector.
 
@@ -77,11 +72,11 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 ##### (Function): A function that unsubscribes the live query.
 
+
+### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
 import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
 ```
-
-### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
 
 This API will give you simple select operation.
 
@@ -106,6 +101,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 ...
 
   constructor(){
+    ...
     let selector0 = (state) => state.favorite;// The child's key of Object selected by first selector would be major key set.
     let selector1 = (state) => state.profile;
     //state.favorite={storeId1: Object1, storeId2: Object2},
@@ -129,10 +125,12 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
       // dispatch({type:'ACTION_NAME', payload:favoriteList}); // set redux state
 
       // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
-
-      // after a while, unsubscribe the livequery
-      this.unsubscribe();
     });
+    componentWillUnmount(){
+      // after a while, unsubscribe the livequery
+      // exec unsubscribe when you don't need to observe the value
+      this.unsubscribe();
+    }
   }
 ```
 
@@ -143,6 +141,7 @@ import { rxQueryInnerJoin } from 'redux-livequery';
 ...
 
   constructor(){
+    ...
     let selector0 = (state) => state.favorite;
     let selector1 = (state) => state.profile;
     //state.favorite={storeId1: Object1, storeId2: Object2},
@@ -159,15 +158,17 @@ import { rxQueryInnerJoin } from 'redux-livequery';
 
       // Below here you can do whatever you want, for example
 
-      // this.setState({favorList:favoriteList});              //set local state
+      // this.setState({...});              //set local state
       // or
-      // dispatch({type:'ACTION_NAME', payload:favoriteList}); // set redux state
+      // dispatch({...}); // set redux state
 
       // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
-
-      // after a while, unsubscribe the livequery
-      this.unsubscribe();
     });
+    componentWillUnmount(){
+      // after a while, unsubscribe the livequery
+      // exec unsubscribe when you don't need to observe the value
+      this.unsubscribe();
+    }
   }
 ```
 
@@ -178,6 +179,7 @@ import { rxQuerySimple } from 'redux-livequery';
 ...
 
   constructor(){
+    ...
     let selector0 = (state) => state.favorite;
     let selector1 = (state) => state.profile;
     //state.favorite={storeId1: Object1, storeId2: Object2},
@@ -201,9 +203,11 @@ import { rxQuerySimple } from 'redux-livequery';
       // dispatch({});          // set redux state
 
       // whenever state.favorite or state.profile change, the result function would be invoked
-
-      // after a while, unsubscribe the livequery
-      this.unsubscribe();
     });
+    componentWillUnmount(){
+      // after a while, unsubscribe the livequery
+      // exec unsubscribe when you don't need to observe the value
+      this.unsubscribe();
+    }
   }
 ```
