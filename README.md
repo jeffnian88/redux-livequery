@@ -118,7 +118,8 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
       // result value would be [{key:storeId1, favor:{Object1}, profile:{Object3}}
       //                        {key:storeId2, favor:{Object2}, profile:{Object4}}]
 
-      // Below here you can do whatever you want, for example
+      // Below here you can do whatever you want here, for example
+      // map(), filter(), reduce(), flatten()
 
       // this.setState({favorList:favoriteList});              //set local state
       // or
@@ -156,7 +157,8 @@ import { rxQueryInnerJoin } from 'redux-livequery';
 
       // result value would be [{key:storeId2, favor:{Object2}, profile:{Object4}}]
 
-      // Below here you can do whatever you want, for example
+      // Below here you can do whatever you want here, for example
+      // map(), filter(), reduce(), flatten()
 
       // this.setState({...});              //set local state
       // or
@@ -196,7 +198,8 @@ import { rxQuerySimple } from 'redux-livequery';
       // result value would be {profile:{storeId2: Object4, storeId3:Object5}
       //                        favorite:{storeId1: Object1, storeId2: Object2}}
 
-      // Below here you can do whatever you want, for example
+      // Below here you can do whatever you want here, for example
+      // map(), filter(), reduce(), flatten()
 
       // this.setState({});     //set local state
       // or
@@ -211,3 +214,6 @@ import { rxQuerySimple } from 'redux-livequery';
     }
   }
 ```
+## Example repo
+
+https://github.com/jeffnian88/redux-livequery-example
