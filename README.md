@@ -216,4 +216,5 @@ import { rxQuerySimple } from 'redux-livequery';
 ```
 ## Example repo
 
+https://github.com/jeffnian88/redux-livequery-todos-example
 https://github.com/jeffnian88/redux-livequery-example
