@@ -61,9 +61,11 @@ function unsubscribeRxQuery(queryID) {
       unsub();
       delete queryIDMapRxStates[queryID][key];
     });
+    delete queryIDMapRxStates[queryID];
     // if success
     return true;
   }
+  // if fail
   return false;
 }
 export function livequeryEnhancer() {
@@ -79,8 +81,11 @@ export function livequeryEnhancer() {
 }
 
 export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, debounceTime = 0) {
-  // TODO
   // sanity-check
+  if (selectorArray.length !== fieldArray.length) {
+    console.error('The length of selectorArray did not match the length of fieldArray.');
+    return null;
+  }
 
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
@@ -141,7 +146,7 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
             console.error("Impossible!!");
           } else {
             // add element
-            list = update(list, { $push: [Object.assign({}, { [field0]: nextValue[key] }, { key: key })] });
+            list = update(list, { $push: [Object.assign({}, { [field0]: nextValue[key] }, { key })] });
           }
         });
 
@@ -181,17 +186,19 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
   return unsub;
 };
 var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
-  // TODO
   // sanity-check
+  if (selectorArray.length !== fieldArray.length) {
+    console.error('The length of selectorArray did not match the length of fieldArray.');
+    return null;
+  }
 
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
 
   let newSelectorArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    newSelectorArray[i] = (uid) => (state) => selectorArray[i](state)[uid];
+    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
   }
-
 
   let list = [];
   let indexMapObjectKeys = {};
@@ -207,6 +214,8 @@ var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(sele
     .mergeMap((val) => {
       //console.log("mergeMap() val:", val);
       let { lastValue, nextValue, field, key } = val;
+
+      // update each the child key set of Object that selected by each selector
       if (nextValue) {
         let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
         if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
@@ -218,17 +227,18 @@ var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(sele
           indexMapObjectKeys[key] = nextValue;
         }
       } else {
+        // if nextValue is null or undefined
         if (indexMapObjectKeys[key]) {
           delete indexMapObjectKeys[key];
         }
       }
 
       let arrayObserable = [Rx.Observable.empty()];
-      // Check if all selector is set.
+      // Check if we get all child key set of each Object selected by selector is set.
       if (lenSelector === Object.keys(indexMapObjectKeys).length) {
-        let nextInterObjectKeys = indexMapObjectKeys[0];
 
         //TODO: improve here
+        let nextInterObjectKeys = indexMapObjectKeys[0];
         for (let i = 1; i < lenSelector; i++) {
           let { andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, indexMapObjectKeys[i]);
           nextInterObjectKeys = andObjectKeys;
@@ -238,6 +248,8 @@ var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(sele
         let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, lastInterObjectKeys);
 
         if (Object.keys(deletedObjectKeys).length !== 0) {
+
+          // we put all data operation into next stage
           arrayObserable.push(Rx.Observable.of({
             nextValue: nextInterObjectKeys,
             lastValue: lastInterObjectKeys,
@@ -325,18 +337,21 @@ function getRelObjectKeys(nextValue = {}, lastValue = {}) {
 }
 
 export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
-  // TODO
   // sanity-check
+  if (selectorArray.length !== fieldArray.length) {
+    console.error('The length of selectorArray did not match the length of fieldArray.');
+    return null;
+  }
+
   let queryID = Date.now();
   let unsub = () => unsubscribeRxQuery(queryID);
-
   let resultObject = {};
 
-  let rootObserable = [];
+  let rootObserableArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    rootObserable.push(createRxStateBySelector(selectorArray[i], fieldArray[i], i, queryID));
+    rootObserableArray.push(createRxStateBySelector(selectorArray[i], fieldArray[i], i, queryID));
   }
-  Rx.Observable.merge(...rootObserable)
+  Rx.Observable.merge(...rootObserableArray)
     .map((val) => {
       //console.log("map() val:", val);
       let { nextValue, lastValue, field, key } = val;

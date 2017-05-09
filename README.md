@@ -9,7 +9,7 @@ Redux state container give a good way to manage the state for React apps, but it
 
 Redux-livequery can provide a query operation to group values from multiple redux state together. It also leverages the redux state subscribe(a low-level API) and RxJS to give live feature to your query (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can also put your logic to shape the data that you would like to have in the same place.
 
-By this above approach, it helps you keep your redux state normalized structures and reducer(pure function) simple as well.
+By this above approach, it helps you keep your redux state normalized structures and reducer simple as well.
 
 ## Install
 
@@ -193,7 +193,7 @@ import { rxQueryInnerJoin } from 'redux-livequery';
 
       // this.setState({...});              //set local state
       // or
-      // dispatch({...}); // set redux state
+      // dispatch({...});                   // set redux state
 
       // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
     });
@@ -204,6 +204,8 @@ import { rxQueryInnerJoin } from 'redux-livequery';
     }
   }
 ```
+
+
 ## Example repo
 
 https://github.com/jeffnian88/redux-livequery-todos-example
