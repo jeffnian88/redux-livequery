@@ -185,7 +185,7 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
 
   return unsub;
 };
-var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
     console.error('The length of selectorArray did not match the length of fieldArray.');
@@ -316,9 +316,9 @@ var rxQueryInnerJoin = exports.rxQueryInnerJoin = function rxQueryInnerJoin(sele
 }
 
 function getRelObjectKeys(nextValue = {}, lastValue = {}) {
-  let deletedObjectKeys = {};
-  let addedObjectkeys = {};
-  let andObjectKeys = {};
+  let addedObjectkeys = {};   // next - last
+  let andObjectKeys = {};     // next & last
+  let deletedObjectKeys = {}; // last - next
   if (lastValue) {
     Object.keys(lastValue).filter((key) => (!(nextValue && (key in nextValue)))).map((key) => {
       deletedObjectKeys[key] = true;
@@ -357,6 +357,136 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
       let { nextValue, lastValue, field, key } = val;
       resultObject = update(resultObject, { [field]: { $set: nextValue } });
       return resultObject;
+    })
+    .debounceTime(debounceTime)
+    .subscribe({
+      next: (val) => {
+        resultFun(val);
+      }
+    });
+
+  return unsub;
+}
+
+export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+  // sanity-check
+  if (selectorArray.length !== fieldArray.length) {
+    console.error('The length of selectorArray did not match the length of fieldArray.');
+    return null;
+  }
+
+  let queryID = Date.now();
+  let unsub = () => unsubscribeRxQuery(queryID);
+
+  let newSelectorArray = [];
+  for (let i = 0; i < selectorArray.length; i++) {
+    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
+  }
+
+  let list = [];
+  let indexMapObjectKeys = {};
+  const lenSelector = selectorArray.length;
+  let lastOuterObjectKeys = [];
+
+  let rootObserable = [];
+  for (let i = 0; i < selectorArray.length; i++) {
+    let fieldName = fieldArray[i];
+    rootObserable.push(createRxStateBySelector(selectorArray[i], `${fieldName}_ObjectKeysChange`, i, queryID));
+  }
+  Rx.Observable.merge(...rootObserable)
+    .mergeMap((val) => {
+      //console.log("mergeMap() val:", val);
+      let { lastValue, nextValue, field, key } = val;
+
+      // update each the child key set of Object that selected by each selector
+      if (nextValue) {
+        let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
+        ) {
+          //console.log(`${field}: NO change checked.`);
+          return Rx.Observable.empty();
+        } else {
+          indexMapObjectKeys[key] = nextValue;
+        }
+      } else {
+        // if nextValue is null or undefined
+        if (indexMapObjectKeys[key]) {
+          delete indexMapObjectKeys[key];
+        }
+      }
+
+      let arrayObserable = [Rx.Observable.empty()];
+      // Check if we get all child key set of each Object selected by selector is set.
+      if (Object.keys(indexMapObjectKeys).length > 0) {
+
+        //TODO: improve here
+        let nextOuterObjectKeys = indexMapObjectKeys[0];
+        for (let i = 1; i < lenSelector; i++) {
+          let { addedObjectkeys } = getRelObjectKeys(indexMapObjectKeys[i], nextOuterObjectKeys);
+          nextOuterObjectKeys = Object.assign({}, nextOuterObjectKeys, addedObjectkeys);
+        }
+        //console.log("nextOuterObjectKeys:", nextOuterObjectKeys, ", lastOuterObjectKeys:", lastOuterObjectKeys);
+
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextOuterObjectKeys, lastOuterObjectKeys);
+
+        if (Object.keys(deletedObjectKeys).length !== 0) {
+
+          // we put all data operation into next stage
+          arrayObserable.push(Rx.Observable.of({
+            nextValue: nextOuterObjectKeys,
+            lastValue: lastOuterObjectKeys,
+            field: `OuterObjectKeysChange_${queryID}`,
+            key
+          }));
+        }
+        Object.keys(deletedObjectKeys).forEach((key) => {
+          for (let i = 0; i < lenSelector; i++) {
+            destroyRxStateByIndex(fieldArray[i], key, queryID);
+          }
+        });
+        Object.keys(addedObjectkeys).forEach((key) => {
+          for (let i = 0; i < lenSelector; i++) {
+            let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
+            arrayObserable.push(obserable);
+          }
+        });
+        lastOuterObjectKeys = nextOuterObjectKeys;
+      }
+      return Rx.Observable.merge(...arrayObserable);
+    })
+    .map((val) => {
+      //console.log("map() val:", val);
+      let { nextValue, lastValue, field, key } = val;
+      if (field === `OuterObjectKeysChange_${queryID}`) {
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+
+        Object.keys(deletedObjectKeys).forEach((key) => {
+          let index = list.findIndex((each) => key === each.key);
+          //console.log(`${key} delete index:`, index);
+          if (index >= 0) {
+            // delete element
+            list = update(list, { $splice: [[index, 1]] });
+            //console.log('del:', key, index, list);
+          } else {
+            console.error("Impossible!!");
+          }
+        });
+
+      } else {
+        // field is other 
+        let index = list.findIndex((each) => key === each.key);
+        if (index >= 0) {
+          // modify element
+          //console.log("modify index:", index);
+          list = update(list, { [index]: { [field]: { $set: nextValue } } });
+        } else {
+          if (key in lastOuterObjectKeys) {
+            list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key })] });
+          }
+        }
+      }
+      return list;
     })
     .debounceTime(debounceTime)
     .subscribe({

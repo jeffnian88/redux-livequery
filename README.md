@@ -5,9 +5,9 @@ Provide LiveQuery to redux state container
 
 ## Motivation
 
-Redux state container give a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
+Redux state container provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
 
-Redux-livequery can provide a query operation to group values from multiple redux state together. It also leverages the redux state subscribe(a low-level API) and RxJS to give live feature to your query (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can also put your logic to shape the data that you would like to have in the same place.
+Redux-livequery can give a query operation (SQL-like) to group values from multiple redux state together. It leverages the redux state subscribe(a low-level API) and RxJS to give live feature to your query (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can put all your logic to shape the data that you would like to have in the same place.
 
 By this above approach, it helps you keep your redux state normalized structures and reducer simple as well.
 
@@ -78,6 +78,26 @@ import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
 This API will reactively get the intersection of the key set by scaning Object selected by each selector.
 
 The resultFunc would be invoked only on the condition intersection set is not empty (or the size of intersection is not zero) and the state you would like to observe changes.
+
+#### Arguments
+
+##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
+##### 2. fieldArray (Array): Give each selector a field name
+##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
+##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+
+#### Returns
+
+##### (Function): A function that unsubscribes the live query.
+
+### `rxQueryOuterJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
+```js
+import { rxQueryOuterJoin } from 'redux-livequery';  New API: 2017-5-9
+```
+
+This API will reactively get the union of the key set by scaning Object selected by each selector.
+
+The resultFunc would be invoked only on the condition union set is not empty (or the size of union is not zero) and the state you would like to observe changes.
 
 #### Arguments
 
