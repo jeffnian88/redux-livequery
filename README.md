@@ -1,22 +1,19 @@
 Provide LiveQuery to redux state container
 
-
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
 
-## Live Demo
+## Example Live Demo & Repo
 * [Live Demo](https://twstorepos.firebaseapp.com)
 
-## Example Repo
+* https://github.com/jeffnian88/redux-livequery-todos-example
 
-https://github.com/jeffnian88/redux-livequery-todos-example
-
-https://github.com/jeffnian88/redux-livequery-example
+* https://github.com/jeffnian88/redux-livequery-example
 
 ## Motivation
 
 Redux state container provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
 
-Redux-livequery can give a live query operation (SQL-like) to group values from multiple redux state together (It decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can put all your logic to shape the data that you would like to have in the same place.
+Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (It decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can put all your logic to shape the data that you would like to have in the same place.
 
 By this above approach, it helps you keep your redux state normalized structures and reducer simple as well.
 
@@ -117,45 +114,6 @@ This API will give you simple select operation.
 #### Returns
 
 ##### (Function): A function that unsubscribes the live query.
-
-## Example for rxQuerySimple API
-```js
-import { rxQuerySimple } from 'redux-livequery';
-...
-  constructor(){
-    ...
-    let selector0 = (state) => state.favorite;
-    let selector1 = (state) => state.profile;
-    //state.favorite={storeId1: Object1, storeId2: Object2},
-    //state.profile={storeId2: Object4, storeId3:Object5}
-    let field0 = 'favor'; 
-    let field1 = 'profile';
-    this.unsubscribe = rxQuerySimple([selector0, selector1], [field0, field1], (result) => {
-      // equals SQL query:
-      // SELECT * FROM profile
-      // SELECT * FROM favorite
-
-      console.log(`result:`, result);
-
-      // result value would be {profile:{storeId2: Object4, storeId3:Object5}
-      //                        favorite:{storeId1: Object1, storeId2: Object2}}
-
-      // Below here you can do whatever you want here, for example
-      // map(), filter(), reduce(), flatten()
-
-      // this.setState({});     //set local state
-      // or
-      // dispatch({});          // set redux state
-
-      // whenever state.favorite or state.profile change, the result function would be invoked
-    });
-    componentWillUnmount(){
-      // after a while, unsubscribe the livequery
-      // exec unsubscribe when you don't need to observe the value
-      this.unsubscribe();
-    }
-  }
-```
 
 ## Example for rxQueryBasedOnObjectKeys API
 ```js
