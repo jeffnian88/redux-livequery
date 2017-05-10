@@ -3,11 +3,20 @@ Provide LiveQuery to redux state container
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
 
+## Live Demo
+* [Live Demo](https://twstorepos.firebaseapp.com)
+
+## Example Repo
+
+https://github.com/jeffnian88/redux-livequery-todos-example
+
+https://github.com/jeffnian88/redux-livequery-example
+
 ## Motivation
 
 Redux state container provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
 
-Redux-livequery can give a query operation (SQL-like) to group values from multiple redux state together. It leverages the redux state subscribe(a low-level API) and RxJS to give live feature to your query (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can put all your logic to shape the data that you would like to have in the same place.
+Redux-livequery can give a live query operation (SQL-like) to group values from multiple redux state together (It decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can put all your logic to shape the data that you would like to have in the same place.
 
 By this above approach, it helps you keep your redux state normalized structures and reducer simple as well.
 
@@ -18,7 +27,6 @@ This has peer dependencies of `rxjs@5.x.x`, `redux` and `immutability-helper`, w
 ```bash
 npm install --save redux-livequery
 ```
-
 
 Configuring The Store
 
@@ -35,24 +43,6 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```
 
 ## Usage
-
-### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
-```js
-import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
-```
-
-This API will give you simple select operation.
-
-#### Arguments
-
-##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object or Array.
-##### 2. fieldArray (Array): Give each selector a field name
-##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
-##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
-
-#### Returns
-
-##### (Function): A function that unsubscribes the live query.
 
 ### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
 ```js
@@ -104,6 +94,24 @@ The resultFunc would be invoked only on the condition union set is not empty (or
 ##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
 ##### 2. fieldArray (Array): Give each selector a field name
 ##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
+##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+
+#### Returns
+
+##### (Function): A function that unsubscribes the live query.
+
+### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
+```js
+import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
+```
+
+This API will give you simple select operation.
+
+#### Arguments
+
+##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object or Array.
+##### 2. fieldArray (Array): Give each selector a field name
+##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
@@ -224,10 +232,3 @@ import { rxQueryInnerJoin } from 'redux-livequery';
     }
   }
 ```
-
-
-## Example repo
-
-https://github.com/jeffnian88/redux-livequery-todos-example
-
-https://github.com/jeffnian88/redux-livequery-example
