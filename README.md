@@ -42,7 +42,7 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 ## Usage
 
-### `rxQueryBasedOnObjectKeys(selectors, fields, resultFunc, debounceTime)`
+#### `rxQueryBasedOnObjectKeys(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 ```
@@ -58,7 +58,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 ##### (Function): A function that unsubscribes the live query.
 
-### `rxQueryInnerJoin(selectors, fields, resultFunc, debounceTime)`
+#### `rxQueryInnerJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
 ```
@@ -78,7 +78,7 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 ##### (Function): A function that unsubscribes the live query.
 
-### `rxQueryOuterJoin(selectors, fields, resultFunc, debounceTime)`
+#### `rxQueryOuterJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryOuterJoin } from 'redux-livequery';  New API: 2017-5-9
 ```
@@ -98,7 +98,7 @@ The resultFunc would be invoked only on the condition union set is not empty (or
 
 ##### (Function): A function that unsubscribes the live query.
 
-### `rxQuerySimple(selectors, fields, resultFunc, debounceTime)`
+#### `rxQuerySimple(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
 ```
