@@ -11,9 +11,9 @@ Provide LiveQuery to redux state container
 
 ## Motivation
 
-Redux state container provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
+Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
 
-Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (It decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a good render performance. Whenever the state you care about changes, the result value would be computed again. And, you can put all your logic to shape the data that you would like to have in the same place.
+Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (It decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in the same place.
 
 By this above approach, it helps you keep your redux state normalized structures and reducer simple as well.
 
@@ -23,6 +23,7 @@ This has peer dependencies of `rxjs@5.x.x`, `redux` and `immutability-helper`, w
 
 ```bash
 npm install --save redux-livequery
+(or yarn add redux-livequery)
 ```
 
 Configuring The Store
@@ -41,15 +42,15 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 ## Usage
 
-### `rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFunc, debounceTime)`
+### `rxQueryBasedOnObjectKeys(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 ```
 
 #### Arguments
 
-##### 1. selectorArray (Array): Choose the state you want to observe, the child's key of Objec selected by the first selector is primary key set.
-##### 2. fieldArray (Array): Give each selector a field name
+##### 1. selectors (Array): Choose the state you want to observe, the child's key of Objec selected by the first selector is primary key set.
+##### 2. fields (Array): Give each selector a field name
 ##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
@@ -57,7 +58,7 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 ##### (Function): A function that unsubscribes the live query.
 
-### `rxQueryInnerJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
+### `rxQueryInnerJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
 ```
@@ -68,8 +69,8 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 #### Arguments
 
-##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
-##### 2. fieldArray (Array): Give each selector a field name
+##### 1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
+##### 2. fields (Array): Give each selector a field name
 ##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
@@ -77,7 +78,7 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 ##### (Function): A function that unsubscribes the live query.
 
-### `rxQueryOuterJoin(selectorArray, fieldArray, resultFunc, debounceTime)`
+### `rxQueryOuterJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryOuterJoin } from 'redux-livequery';  New API: 2017-5-9
 ```
@@ -88,8 +89,8 @@ The resultFunc would be invoked only on the condition union set is not empty (or
 
 #### Arguments
 
-##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
-##### 2. fieldArray (Array): Give each selector a field name
+##### 1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
+##### 2. fields (Array): Give each selector a field name
 ##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
@@ -97,7 +98,7 @@ The resultFunc would be invoked only on the condition union set is not empty (or
 
 ##### (Function): A function that unsubscribes the live query.
 
-### `rxQuerySimple(selectorArray, fieldArray, resultFunc, debounceTime)`
+### `rxQuerySimple(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
 ```
@@ -106,8 +107,8 @@ This API will give you simple select operation.
 
 #### Arguments
 
-##### 1. selectorArray (Array): Choose the state you want to observe, the selector is to select the Object or Array.
-##### 2. fieldArray (Array): Give each selector a field name
+##### 1. selectors (Array): Choose the state you want to observe, the selector is to select the Object or Array.
+##### 2. fields (Array): Give each selector a field name
 ##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
 ##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
