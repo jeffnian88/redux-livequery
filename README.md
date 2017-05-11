@@ -49,14 +49,14 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
 
 #### Arguments
 
-##### 1. selectors (Array): Choose the state you want to observe, the child's key of Objec selected by the first selector is primary key set.
-##### 2. fields (Array): Give each selector a field name
-##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
-##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+1. selectors (Array): Choose the state you want to observe, the child's key of Objec selected by the first selector is primary key set.
+2. fields (Array): Give each selector a field name
+3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
+4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
 
-##### (Function): A function that unsubscribes the live query.
+(Function): A function that unsubscribes the live query.
 
 #### `rxQueryInnerJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
@@ -69,14 +69,14 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 #### Arguments
 
-##### 1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
-##### 2. fields (Array): Give each selector a field name
-##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
-##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
+2. fields (Array): Give each selector a field name
+3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
+4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
 
-##### (Function): A function that unsubscribes the live query.
+(Function): A function that unsubscribes the live query.
 
 #### `rxQueryOuterJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
@@ -89,14 +89,14 @@ The resultFunc would be invoked only on the condition union set is not empty (or
 
 #### Arguments
 
-##### 1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
-##### 2. fields (Array): Give each selector a field name
-##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
-##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
+2. fields (Array): Give each selector a field name
+3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
+4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
 
-##### (Function): A function that unsubscribes the live query.
+(Function): A function that unsubscribes the live query.
 
 #### `rxQuerySimple(selectors, fields, resultFunc, debounceTime)`
 ```js
@@ -107,14 +107,14 @@ This API will give you simple select operation.
 
 #### Arguments
 
-##### 1. selectors (Array): Choose the state you want to observe, the selector is to select the Object or Array.
-##### 2. fields (Array): Give each selector a field name
-##### 3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
-##### 4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+1. selectors (Array): Choose the state you want to observe, the selector is to select the Object or Array.
+2. fields (Array): Give each selector a field name
+3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
+4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
 
 #### Returns
 
-##### (Function): A function that unsubscribes the live query.
+(Function): A function that unsubscribes the live query.
 
 ## Example for rxQueryBasedOnObjectKeys API
 ```js
