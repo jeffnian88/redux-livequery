@@ -96,6 +96,7 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
   }
 
   let list = [];
+  let keyMapIndex = {};
   createRxStateBySelector(selectorArray[0], field0, 0, queryID)
     .mergeMap(val => {
       //console.log("mergeMap() val:", val);
@@ -129,34 +130,34 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
         let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
 
         Object.keys(deletedObjectKeys).forEach((key) => {
-          let index = list.findIndex((each) => key === each.key);
+          let index = findIndexWrapper(list, key, keyMapIndex);
           //console.log(`${key} delete index:`, index);
           if (index >= 0) {
             // delete element
-            list = update(list, { $splice: [[index, 1]] });
+            list = deleteListWrapper(list, index, keyMapIndex);
             //console.log('del:', key, index, list);
           } else {
             console.error("Impossible!!");
           }
         });
         Object.keys(addedObjectkeys).forEach((key) => {
-          let index = list.findIndex((each) => key === each.key);
+          let index = findIndexWrapper(list, key, keyMapIndex);
           //console.log(`${key} add index:`, index);
           if (index >= 0) {
             console.error("Impossible!!");
           } else {
             // add element
-            list = update(list, { $push: [Object.assign({}, { [field0]: nextValue[key] }, { key })] });
+            list = pushListWrapper(list, { [field0]: nextValue[key] }, key, keyMapIndex);
           }
         });
 
         Object.keys(andObjectKeys).forEach((key) => {
           if (nextValue[key] !== lastValue[key]) {
-            let index = list.findIndex((each) => key === each.key);
+            let index = findIndexWrapper(list, key, keyMapIndex);
             if (index >= 0) {
               // modify element
               //console.log("modify index:", index);
-              list = update(list, { [index]: { [field0]: { $set: nextValue[key] } } });
+              list = updateListWrapper(list, index, field0, nextValue[key]);
             } else {
               console.error("Impossible!!");
             }
@@ -164,14 +165,14 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
         });
       } else {
         // field is other 
-        let index = list.findIndex((each) => key === each.key);
+        let index = findIndexWrapper(list, key, keyMapIndex);
         if (index >= 0) {
           // modify element
           //console.log("modify index:", index);
-          list = update(list, { [index]: { [field]: { $set: nextValue } } });
+          list = updateListWrapper(list, index, field, nextValue);
         } else {
           // shouldn't happen?
-          list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key })] });
+          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
         }
       }
       return list;
@@ -201,6 +202,8 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
   }
 
   let list = [];
+  let keyMapIndex = {};
+
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
   let lastInterObjectKeys = [];
@@ -279,11 +282,11 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
         let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
 
         Object.keys(deletedObjectKeys).forEach((key) => {
-          let index = list.findIndex((each) => key === each.key);
+          let index = findIndexWrapper(list, key, keyMapIndex);
           //console.log(`${key} delete index:`, index);
           if (index >= 0) {
             // delete element
-            list = update(list, { $splice: [[index, 1]] });
+            list = deleteListWrapper(list, index, keyMapIndex);
             //console.log('del:', key, index, list);
           } else {
             console.error("Impossible!!");
@@ -292,14 +295,14 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
 
       } else {
         // field is other 
-        let index = list.findIndex((each) => key === each.key);
+        let index = findIndexWrapper(list, key, keyMapIndex);
         if (index >= 0) {
           // modify element
           //console.log("modify index:", index);
-          list = update(list, { [index]: { [field]: { $set: nextValue } } });
+          list = updateListWrapper(list, index, field, nextValue);
         } else {
           if (key in lastInterObjectKeys) {
-            list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key })] });
+            list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
           }
         }
       }
@@ -384,6 +387,8 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
   }
 
   let list = [];
+  let keyMapIndex = {};
+
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
   let lastOuterObjectKeys = [];
@@ -462,11 +467,11 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
         let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
 
         Object.keys(deletedObjectKeys).forEach((key) => {
-          let index = list.findIndex((each) => key === each.key);
+          let index = findIndexWrapper(list, key, keyMapIndex);
           //console.log(`${key} delete index:`, index);
           if (index >= 0) {
             // delete element
-            list = update(list, { $splice: [[index, 1]] });
+            list = deleteListWrapper(list, index, keyMapIndex);
             //console.log('del:', key, index, list);
           } else {
             console.error("Impossible!!");
@@ -475,14 +480,14 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
 
       } else {
         // field is other 
-        let index = list.findIndex((each) => key === each.key);
+        let index = findIndexWrapper(list, key, keyMapIndex);
         if (index >= 0) {
           // modify element
           //console.log("modify index:", index);
-          list = update(list, { [index]: { [field]: { $set: nextValue } } });
+          list = updateListWrapper(list, index, field, nextValue);
         } else {
           if (key in lastOuterObjectKeys) {
-            list = update(list, { $push: [Object.assign({}, { [field]: nextValue }, { key })] });
+            list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
           }
         }
       }
@@ -496,4 +501,57 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
     });
 
   return unsub;
+}
+
+
+function getNextKeyMapIndex(list, key, keyMapIndex) {
+  if (key in keyMapIndex) {
+    //let nextKeyMapIndex = Object.assign({}, keyMapIndex);
+    let nextKeyMapIndex = keyMapIndex;
+    let index = keyMapIndex[key];
+    for (let i = index + 1; i < list.length; i++) {
+      let key = list[i].key;
+      nextKeyMapIndex[key] = nextKeyMapIndex[key] - 1;
+    }
+    delete nextKeyMapIndex[key];
+    return nextKeyMapIndex;
+  }
+  return null;
+
+}
+function improvedFindIndexByKey(list, key, keyMapIndex) {
+  if (key in keyMapIndex) {
+    return keyMapIndex[key];
+  } else {
+    return -1;
+  }
+}
+
+// Find Index By Key
+function findIndexWrapper(list, key, keyMapIndex) {
+  //let index = improvedFindIndexByKey(list, key, keyMapIndex);
+  // old way to find index 
+  let index = list.findIndex((each) => key === each.key);
+
+  if (index !== improvedFindIndexByKey(list, key, keyMapIndex)) {
+    console.log('improvedFindIndexByKey() not equal to findIndex().');
+  }
+  return index;
+}
+
+// Create
+function pushListWrapper(list, data, key, keyMapIndex) {
+  keyMapIndex[key] = list.length;
+  return update(list, { $push: [Object.assign({}, data, { key })] });
+}
+// Update
+function updateListWrapper(list, index, field, data) {
+  return update(list, { [index]: { [field]: { $set: data } } });
+}
+// Delete
+function deleteListWrapper(list, index, keyMapIndex) {
+  //function getNextKeyMapIndex(keyMapIndex, key, list) {
+  keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
+  if (keyMapIndex === null) console.log('List is inconsistent with keyMapIndex');
+  return update(list, { $splice: [[index, 1]] });
 }
