@@ -2,8 +2,8 @@ Provide LiveQuery to redux state container
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
 
-## Example Live Demo & Repo
-* [Live Demo](https://twstorepos.firebaseapp.com)
+## Todos Live Demo & Repo for redux-livequery
+* [Todos Live Demo](https://twstorepos.firebaseapp.com)
 
 * https://github.com/jeffnian88/redux-livequery-todos-example
 
