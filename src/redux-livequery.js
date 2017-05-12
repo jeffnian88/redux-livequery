@@ -1,8 +1,18 @@
 "use strict";
 import update from 'immutability-helper';
-var store = void 0;
-var Rx = require('rxjs/Rx');
-
+let store = void 0;
+const Rx = require('rxjs/Rx');
+let queries = [];
+export function runLivequery() {
+  queries.forEach((each) => {
+    each(store);
+  });
+}
+export function combineLivequery(...queryArray) {
+  queryArray.forEach((each) => {
+    queries.push(each);
+  });
+}
 function makeCheckFuncWithSelector(selector, cb) {
   let currentValue = null;
   let previousValue = null;
