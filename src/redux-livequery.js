@@ -3,6 +3,7 @@ import update from 'immutability-helper';
 let store = void 0;
 const Rx = require('rxjs/Rx');
 let queries = [];
+let queryIDMap = {};
 export function runLivequery() {
   queries.forEach((each) => {
     each(store);
@@ -13,6 +14,8 @@ export function combineLivequery(...queryArray) {
     queries.push(each);
   });
 }
+
+
 function makeCheckFuncWithSelector(selector, cb) {
   let currentValue = null;
   let previousValue = null;
@@ -32,15 +35,18 @@ function makeCheckFuncWithSelector(selector, cb) {
   };
 }
 
+// TODO: use Singleton Observable that can improve performance if selector function is the same path
+let rxStateIDMapObservable = {};
+
 let queryIDMapRxStates = {};
-export function createRxStateBySelector(selector, field, key, queryID) {
-  //console.log('createRxStateBySelector():', field, key);
+function createRxStateBySelector(selector, field, key, queryID) {
   let rxStateID = `${field}_${key}_${queryID}`;
+  //if (rxStateIDMapObservable[rxStateID]) {
   if (queryIDMapRxStates[queryID] && queryIDMapRxStates[queryID][rxStateID]) {
     console.error("Shouldn't happen.", rxStateID, queryIDMapRxStates[queryID]);
-    return null;
+    //return rxStateIDMapObservable[rxStateID];
   }
-  return Rx.Observable.create((subscriber) => {
+  return rxStateIDMapObservable[rxStateID] = Rx.Observable.create((subscriber) => {
     //console.log(`subscribe():${rxStateID}`);
     let func = makeCheckFuncWithSelector(selector, (nextValue, lastValue) => {
       let val = { nextValue, lastValue, field, key };
@@ -60,6 +66,7 @@ function destroyRxStateByIndex(field, key, queryID) {
     subscriber.complete();
     unsub();
     delete queryIDMapRxStates[queryID][rxStateID];
+    delete rxStateIDMapObservable[rxStateID];
   } else {
     console.error("Shouldn't happen.", rxStateID, queryIDMapRxStates[queryID]);
     return null;
@@ -100,7 +107,8 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
     return null;
   }
 
-  let queryID = Date.now();
+  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
+
   let unsub = () => unsubscribeRxQuery(queryID);
   let field0 = fieldArray[0];
   let newSelectorArray = [];
@@ -206,7 +214,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
     return null;
   }
 
-  let queryID = Date.now();
+  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
   let unsub = () => unsubscribeRxQuery(queryID);
 
   let newSelectorArray = [];
@@ -360,7 +368,7 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
     return null;
   }
 
-  let queryID = Date.now();
+  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
   let unsub = () => unsubscribeRxQuery(queryID);
   let resultObject = {};
 
@@ -392,7 +400,7 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
     return null;
   }
 
-  let queryID = Date.now();
+  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
   let unsub = () => unsubscribeRxQuery(queryID);
 
   let newSelectorArray = [];
@@ -414,7 +422,7 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
   }
   Rx.Observable.merge(...rootObserable)
     .mergeMap((val) => {
-      //console.log("mergeMap() val:", val);
+      //console.log(`rxQueryOuterJoin => ${queryID}:`, " mergeMap() val:", val);
       let { lastValue, nextValue, field, key } = val;
 
       // update each the child key set of Object that selected by each selector
@@ -542,7 +550,6 @@ function improvedFindIndexByKey(list, key, keyMapIndex) {
     return -1;
   }
 }
-
 // Find Index By Key
 function findIndexWrapper(list, key, keyMapIndex) {
   //let index = improvedFindIndexByKey(list, key, keyMapIndex);
@@ -554,7 +561,6 @@ function findIndexWrapper(list, key, keyMapIndex) {
   }
   return index;
 }
-
 // Create
 function pushListWrapper(list, data, key, keyMapIndex) {
   keyMapIndex[key] = list.length;
