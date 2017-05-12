@@ -44,7 +44,7 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 
 
 ```js
-import { livequeryEnhancer } from 'redux-livequery';
+import { livequeryEnhancer, runLivequery } from 'redux-livequery';
 import import './livequery';
 const enhancer = compose(
   livequeryEnhancer(),

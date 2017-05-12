@@ -1,6 +1,6 @@
 {
   "name": "redux-livequery",
-  "version": "0.2.8-rc.1",
+  "version": "0.2.8-rc.3",
   "description": "Provide LiveQuery to redux state container",
   "main": "lib/cjs/index.js",
   "scripts": {
