@@ -26,7 +26,7 @@ npm install --save redux-livequery
 (or yarn add redux-livequery)
 ```
 
-Configuring The Store
+### Configuring The Store
 
 ```js
 import { livequeryEnhancer } from 'redux-livequery';
@@ -40,7 +40,7 @@ import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```
 
-Configuring The Query for cross-component (Optional)
+### Support Cross-component Query (Optional)
 
 ```js
 // in store.js
