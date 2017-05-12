@@ -40,12 +40,12 @@ import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```
 
-### Support Cross-component Query (Optional)
+### Configuring The Store for Cross-component Query Support(Optional)
+
 
 ```js
-// in store.js
-import import './livequery';
 import { livequeryEnhancer } from 'redux-livequery';
+import import './livequery';
 const enhancer = compose(
   livequeryEnhancer(),
   autoRehydrate(),
@@ -55,17 +55,19 @@ const enhancer = compose(
 import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
 runLivequery();
-...
+```
 
-// index.js file in ./livequery 
+```js
+// index.js file in ./livequery
 import { combineLivequery } from 'redux-livequery';
 import someQuery from './someQuery';
 const rootLivequery = combineLivequery(
   someQuery
 );
 export default rootLivequery;
-...
+```
 
+```js
 // someQuery.js file in ./livequery
 import { rxQuerySimple } from 'redux-livequery';
 export default function someQuery(store) {
