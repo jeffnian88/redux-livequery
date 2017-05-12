@@ -71,21 +71,21 @@ export default rootLivequery;
 // someQuery.js file in ./livequery
 import { rxQuerySimple } from 'redux-livequery';
 export default function someQuery(store) {
-	console.log("someQuery()");
-	let selector0 = (state) => state.task.isComplete;
-	let selector1 = (state) => state.task.isActive;
-	rxQuerySimple([selector0, selector1], ['isComplete', 'isActive'], (completeActive) => {
-		// you can do whatever you want here
-		// ex: filter, reduce, map
-		let isCompleteNotActive = {};
-		for (let key in completeActive.isComplete) {
-			if (!(key in completeActive.isActive)) {
-				isCompleteNotActive[key] = completeActive.isComplete[key];
-			}
-		}
-		// set data into redux state
-		store.dispatch({ type: "SET_COMPLETE_NOT_ACTIVE", payload: { isCompleteNotActive } });
-	}, 0);
+  console.log("someQuery()");
+  let selector0 = (state) => state.task.isComplete;
+  let selector1 = (state) => state.task.isActive;
+  rxQuerySimple([selector0, selector1], ['isComplete', 'isActive'], (completeActive) => {
+    // you can do whatever you want here
+    // ex: filter, reduce, map
+    let isCompleteNotActive = {};
+    for (let key in completeActive.isComplete) {
+      if (!(key in completeActive.isActive)) {
+        isCompleteNotActive[key] = completeActive.isComplete[key];
+      }
+    }
+    // set data into redux state
+    store.dispatch({ type: "SET_COMPLETE_NOT_ACTIVE", payload: { isCompleteNotActive } });
+  }, 0);
 }
 ```
 
