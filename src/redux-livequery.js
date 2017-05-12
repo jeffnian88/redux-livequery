@@ -35,17 +35,19 @@ function makeCheckFuncWithSelector(selector, cb) {
 let queryIDMapRxStates = {};
 export function createRxStateBySelector(selector, field, key, queryID) {
   //console.log('createRxStateBySelector():', field, key);
+  let rxStateID = `${field}_${key}_${queryID}`;
+  if (queryIDMapRxStates[queryID] && queryIDMapRxStates[queryID][rxStateID]) {
+    console.error("Shouldn't happen.", rxStateID, queryIDMapRxStates[queryID]);
+    return null;
+  }
   return Rx.Observable.create((subscriber) => {
-    //console.log('Rx.Observable.create():', field, key);
+    //console.log(`subscribe():${rxStateID}`);
     let func = makeCheckFuncWithSelector(selector, (nextValue, lastValue) => {
       let val = { nextValue, lastValue, field, key };
       //console.log(`trigger next =>`, val);
       subscriber.next(val);
     });
-
     let unsub = store.subscribe(func);
-    let rxStateID = `${field}_${key}_${queryID}`;
-    //console.log(`subscribe():${rxStateID}`);
     queryIDMapRxStates[queryID] = Object.assign({}, queryIDMapRxStates[queryID], { [rxStateID]: { subscriber, unsub } });
     //console.log(`queryIDMapRxStates[${queryID}]:`, queryIDMapRxStates[queryID]);
   });
@@ -59,7 +61,8 @@ function destroyRxStateByIndex(field, key, queryID) {
     unsub();
     delete queryIDMapRxStates[queryID][rxStateID];
   } else {
-    console.error("Shouldn't happen.");
+    console.error("Shouldn't happen.", rxStateID, queryIDMapRxStates[queryID]);
+    return null;
   }
 }
 function unsubscribeRxQuery(queryID) {
@@ -225,7 +228,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
   }
   Rx.Observable.merge(...rootObserable)
     .mergeMap((val) => {
-      //console.log("mergeMap() val:", val);
+      //console.log(`rxQueryInnerJoin => ${queryID}:`, " mergeMap() val:", val);
       let { lastValue, nextValue, field, key } = val;
 
       // update each the child key set of Object that selected by each selector
@@ -256,12 +259,11 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
           let { andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, indexMapObjectKeys[i]);
           nextInterObjectKeys = andObjectKeys;
         }
-        //console.log("nextInterObjectKeys:", nextInterObjectKeys, ", lastInterObjectKeys:", lastInterObjectKeys);
 
         let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, lastInterObjectKeys);
+        //console.log(`rxQueryInnerJoin => ${queryID}: nextInterObjectKeys:`, nextInterObjectKeys, `lastInterObjectKeys:`, lastInterObjectKeys);
 
         if (Object.keys(deletedObjectKeys).length !== 0) {
-
           // we put all data operation into next stage
           arrayObserable.push(Rx.Observable.of({
             nextValue: nextInterObjectKeys,
@@ -270,6 +272,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
             key
           }));
         }
+        lastInterObjectKeys = nextInterObjectKeys;
         Object.keys(deletedObjectKeys).forEach((key) => {
           for (let i = 0; i < lenSelector; i++) {
             destroyRxStateByIndex(fieldArray[i], key, queryID);
@@ -278,10 +281,11 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
         Object.keys(addedObjectkeys).forEach((key) => {
           for (let i = 0; i < lenSelector; i++) {
             let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
-            arrayObserable.push(obserable);
+            if (obserable) {
+              arrayObserable.push(obserable);
+            }
           }
         });
-        lastInterObjectKeys = nextInterObjectKeys;
       }
       return Rx.Observable.merge(...arrayObserable);
     })
@@ -455,6 +459,7 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
             key
           }));
         }
+        lastOuterObjectKeys = nextOuterObjectKeys;
         Object.keys(deletedObjectKeys).forEach((key) => {
           for (let i = 0; i < lenSelector; i++) {
             destroyRxStateByIndex(fieldArray[i], key, queryID);
@@ -463,10 +468,11 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
         Object.keys(addedObjectkeys).forEach((key) => {
           for (let i = 0; i < lenSelector; i++) {
             let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
-            arrayObserable.push(obserable);
+            if (obserable) {
+              arrayObserable.push(obserable);
+            }
           }
         });
-        lastOuterObjectKeys = nextOuterObjectKeys;
       }
       return Rx.Observable.merge(...arrayObserable);
     })
