@@ -40,8 +40,9 @@ import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```
 
-### Configuring The Store for Cross-component Query Support(Optional)
+### Configuring The Store for Cross-component Support(Optional)
 
+Now, redux-livequery can push the resultVal back to redux state for sharing the state to diferent components.
 
 ```js
 import { livequeryEnhancer, runLivequery } from 'redux-livequery';
