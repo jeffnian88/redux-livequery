@@ -4,3 +4,4 @@ temp
 dist
 _book
 typings
+lib/*

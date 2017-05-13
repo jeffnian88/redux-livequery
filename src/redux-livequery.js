@@ -107,7 +107,7 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
     return null;
   }
 
-  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
+  let queryID = getUniqueQueryID();
 
   let unsub = () => unsubscribeRxQuery(queryID);
   let field0 = fieldArray[0];
@@ -214,7 +214,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
     return null;
   }
 
-  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
+  let queryID = getUniqueQueryID();
   let unsub = () => unsubscribeRxQuery(queryID);
 
   let newSelectorArray = [];
@@ -368,7 +368,7 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
     return null;
   }
 
-  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
+  let queryID = getUniqueQueryID();
   let unsub = () => unsubscribeRxQuery(queryID);
   let resultObject = {};
 
@@ -400,7 +400,7 @@ export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceT
     return null;
   }
 
-  let queryID, i = 0; while ((queryID = Date.now() + i) in queryIDMap) { i++; } queryIDMap[queryID] = true;
+  let queryID = getUniqueQueryID();
   let unsub = () => unsubscribeRxQuery(queryID);
 
   let newSelectorArray = [];
@@ -576,4 +576,11 @@ function deleteListWrapper(list, index, keyMapIndex) {
   keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
   if (keyMapIndex === null) console.log('List is inconsistent with keyMapIndex');
   return update(list, { $splice: [[index, 1]] });
+}
+
+function getUniqueQueryID() {
+  let queryID, i = 0;
+  while ((queryID = Date.now() + i) in queryIDMap) { i++; }
+  queryIDMap[queryID] = true;
+  return queryID;
 }
