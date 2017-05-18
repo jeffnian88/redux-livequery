@@ -11,11 +11,11 @@ Provide LiveQuery (SQL-like) to redux state container
 
 ## Motivation
 
-Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state (We take redux as database, then redux should provide query-like to our react component). And in reselect, you have to compose your date manually and put yout logic in mutliple nested function.
+Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state (We take redux as database, then redux should provide query-like to our react component). And in reselect, you have to compose your data manually and put yout logic in mutliple nested function.
 
-Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in one place (There are too much nested logic in reselect).
+Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in one place.
 
-By this above approach, it helps you keep your redux state normalized structures and reducer simple (no more filter or findIndex operation, we should retrieve the data by index not by filtering or finding) as well.
+By this above approach, it helps you keep your redux state normalized structures and reducer simple (no more filter or findIndex operation, we should retrieve the data by indexing not by filtering or finding) as well.
 
 ## Install
 
