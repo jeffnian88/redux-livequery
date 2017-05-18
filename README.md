@@ -138,11 +138,31 @@ The resultFunc would be invoked only on the condition intersection set is not em
 #### `rxQueryFullOuterJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
 import { rxQueryFullOuterJoin } from 'redux-livequery';  New API: 2017-5-9
+// Note: rename rxQueryOuterJoin into rxQueryFullOuterJoin
 ```
 
 This API will reactively get the union of the key set by scaning Object selected by each selector.
 
 The resultFunc would be invoked only on the condition union set is not empty (or the size of union is not zero) and the state you would like to observe changes.
+
+#### Arguments
+
+1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
+2. fields (Array): Give each selector a field name
+3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
+4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
+
+#### Returns
+
+(Function): A function that unsubscribes the live query.
+
+#### `rxQueryLeftOuterJoin(selectors, fields, resultFunc, debounceTime)`
+```js
+import { rxQueryLeftOuterJoin } from 'redux-livequery';  New API: 2017-5-19
+```
+The result of a left outer join for tables A and B always contains all rows of the "left" table (A), even if the join-condition does not find any matching row in the "right" table (B).
+
+The resultFunc would be invoked only on the condition result set is not empty and the state you would like to observe changes.
 
 #### Arguments
 
