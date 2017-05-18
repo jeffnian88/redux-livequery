@@ -1,4 +1,4 @@
-Provide LiveQuery to redux state container
+Provide LiveQuery (SQL-like) to redux state container
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
 
@@ -11,11 +11,11 @@ Provide LiveQuery to redux state container
 
 ## Motivation
 
-Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state.
+Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state (We take redux as database, then redux should provide query-like to react component).
 
-Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (It decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in the same place.
+Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in the same place (There are too much nested logic in reselect).
 
-By this above approach, it helps you keep your redux state normalized structures and reducer simple as well.
+By this above approach, it helps you keep your redux state normalized structures and reducer simple (no more filter or findIndex operation) as well.
 
 ## Install
 
@@ -31,8 +31,8 @@ npm install --save redux-livequery
 ```js
 import { livequeryEnhancer } from 'redux-livequery';
 const enhancer = compose(
-  livequeryEnhancer(),
-  autoRehydrate(),
+  livequeryEnhancer(),// <===
+  ....
   applyMiddleware(....),
   window.devToolsExtension ? window.devToolsExtension() : f => f // add support for Redux dev tools,
 );
@@ -55,7 +55,7 @@ const enhancer = compose(
 );
 import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
-runLivequery();
+runLivequery(); // after createStore()
 ```
 
 ```js
