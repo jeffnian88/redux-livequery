@@ -135,9 +135,9 @@ The resultFunc would be invoked only on the condition intersection set is not em
 
 (Function): A function that unsubscribes the live query.
 
-#### `rxQueryOuterJoin(selectors, fields, resultFunc, debounceTime)`
+#### `rxQueryFullOuterJoin(selectors, fields, resultFunc, debounceTime)`
 ```js
-import { rxQueryOuterJoin } from 'redux-livequery';  New API: 2017-5-9
+import { rxQueryFullOuterJoin } from 'redux-livequery';  New API: 2017-5-9
 ```
 
 This API will reactively get the union of the key set by scaning Object selected by each selector.

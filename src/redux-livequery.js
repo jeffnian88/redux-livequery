@@ -394,7 +394,7 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
   return unsub;
 }
 
-export function rxQueryOuterJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
     console.error('The length of selectorArray did not match the length of fieldArray.');
