@@ -2,7 +2,7 @@ Provide LiveQuery (SQL-like) to redux state container
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
 
-## Todos Live Demo & Repo for redux-livequery
+## Todos Live Demo and Repo using redux-livequery library
 * [Todos Live Demo](https://twstorepos.firebaseapp.com)
 
 * https://github.com/jeffnian88/redux-livequery-todos-example
@@ -11,11 +11,11 @@ Provide LiveQuery (SQL-like) to redux state container
 
 ## Motivation
 
-Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state (We take redux as database, then redux should provide query-like to react component).
+Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value you would like to have from multiple redux state (We take redux as database, then redux should provide query-like to our react component). And in reselect, you have to compose your date manually and put yout logic in mutliple nested function.
 
-Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in the same place (There are too much nested logic in reselect).
+Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in one place (There are too much nested logic in reselect).
 
-By this above approach, it helps you keep your redux state normalized structures and reducer simple (no more filter or findIndex operation) as well.
+By this above approach, it helps you keep your redux state normalized structures and reducer simple (no more filter or findIndex operation, we should retrieve the data by index not by filtering or finding) as well.
 
 ## Install
 
@@ -93,9 +93,15 @@ export default function someQuery(store) {
 
 ## Usage
 
-#### `rxQueryBasedOnObjectKeys(selectors, fields, resultFunc, debounceTime)`
+#### `rxQueryLeftJoin(selectors, fields, resultFunc, debounceTime)`
+
 ```js
-import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
+import { rxQueryLeftJoin } from 'redux-livequery';
+//import { rxQueryBasedOnObjectKeys } from 'redux-livequery'; // This will be removed at next version
+
+// Note: Rename rxQueryBasedOnObjectKeys into rxQueryLeftJoin.
+// rxQueryBasedOnObjectKeys still work, the both operation is identical.
+
 ```
 
 #### Arguments

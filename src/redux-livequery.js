@@ -100,7 +100,7 @@ export function livequeryEnhancer() {
   };
 }
 
-export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
     console.error('The length of selectorArray did not match the length of fieldArray.');
@@ -207,6 +207,7 @@ export function rxQueryBasedOnObjectKeys(selectorArray, fieldArray, resultFun, d
 
   return unsub;
 };
+export const rxQueryBasedOnObjectKeys = rxQueryLeftJoin;
 export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
