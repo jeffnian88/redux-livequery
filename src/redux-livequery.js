@@ -146,7 +146,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
 
       return Rx.Observable.merge(...arrayObserable);
     }).map(val => {
-      //cl("map() val:", val);
+      //cl("Left map() val:", val);
       let { nextValue, lastValue, key, field } = val;
 
       if (field === field0) {
@@ -231,7 +231,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
 
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
-  let lastInterObjectKeys = [];
+  let lastResultObjectKeys = [];
 
   let rootObserable = [];
   for (let i = 0; i < selectorArray.length; i++) {
@@ -266,25 +266,25 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
       if (lenSelector === Object.keys(indexMapObjectKeys).length) {
 
         //TODO: improve here
-        let nextInterObjectKeys = indexMapObjectKeys[0];
+        let nextResultObjectKeys = indexMapObjectKeys[0];
         for (let i = 1; i < lenSelector; i++) {
-          let { andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, indexMapObjectKeys[i]);
-          nextInterObjectKeys = andObjectKeys;
+          let { andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, indexMapObjectKeys[i]);
+          nextResultObjectKeys = andObjectKeys;
         }
 
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextInterObjectKeys, lastInterObjectKeys);
-        //cl(`rxQueryInnerJoin => ${queryID}: nextInterObjectKeys:`, nextInterObjectKeys, `lastInterObjectKeys:`, lastInterObjectKeys);
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
+        //cl(`rxQueryInnerJoin => ${queryID}: nextResultObjectKeys:`, nextResultObjectKeys, `lastResultObjectKeys:`, lastResultObjectKeys);
 
         if (Object.keys(deletedObjectKeys).length !== 0) {
           // we put all data operation into next stage
           arrayObserable.push(Rx.Observable.of({
-            nextValue: nextInterObjectKeys,
-            lastValue: lastInterObjectKeys,
-            field: `interObjectKeysChange_${queryID}`,
+            nextValue: nextResultObjectKeys,
+            lastValue: lastResultObjectKeys,
+            field: `resultObjectKeysChange_${queryID}`,
             key
           }));
         }
-        lastInterObjectKeys = nextInterObjectKeys;
+        lastResultObjectKeys = nextResultObjectKeys;
         Object.keys(deletedObjectKeys).forEach((key) => {
           for (let i = 0; i < lenSelector; i++) {
             destroyRxStateByIndex(fieldArray[i], key, queryID);
@@ -304,10 +304,9 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
     .map((val) => {
       //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
-      if (field === `interObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-
-        Object.keys(deletedObjectKeys).forEach((key) => {
+      if (field === `resultObjectKeysChange_${queryID}`) {
+        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in deletedObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
@@ -317,8 +316,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
           } else {
             console.error("Impossible!!");
           }
-        });
-
+        }
       } else {
         // field is other 
         let index = findIndexWrapper(list, key, keyMapIndex);
@@ -327,9 +325,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
           //cl("modify index:", index);
           list = updateListWrapper(list, index, field, nextValue);
         } else {
-          if (key in lastInterObjectKeys) {
-            list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-          }
+          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
         }
       }
       return list;
@@ -382,7 +378,6 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
   }
   Rx.Observable.merge(...rootObserableArray)
     .map((val) => {
-      //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
       resultObject = update(resultObject, { [field]: { $set: nextValue } });
       return resultObject;
@@ -417,7 +412,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
 
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
-  let lastOuterObjectKeys = [];
+  let lastResultObjectKeys = [];
 
   let rootObserable = [];
   for (let i = 0; i < selectorArray.length; i++) {
@@ -452,26 +447,26 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
       if (Object.keys(indexMapObjectKeys).length > 0) {
 
         //TODO: improve here
-        let nextOuterObjectKeys = indexMapObjectKeys[0];
+        let nextResultObjectKeys = indexMapObjectKeys[0];
         for (let i = 1; i < lenSelector; i++) {
-          let { addedObjectkeys } = getRelObjectKeys(indexMapObjectKeys[i], nextOuterObjectKeys);
-          nextOuterObjectKeys = Object.assign({}, nextOuterObjectKeys, addedObjectkeys);
+          let { addedObjectkeys } = getRelObjectKeys(indexMapObjectKeys[i], nextResultObjectKeys);
+          nextResultObjectKeys = Object.assign({}, nextResultObjectKeys, addedObjectkeys);
         }
-        //cl("nextOuterObjectKeys:", nextOuterObjectKeys, ", lastOuterObjectKeys:", lastOuterObjectKeys);
+        //cl("nextResultObjectKeys:", nextResultObjectKeys, ", lastResultObjectKeys:", lastResultObjectKeys);
 
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextOuterObjectKeys, lastOuterObjectKeys);
+        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
 
         if (Object.keys(deletedObjectKeys).length !== 0) {
 
           // we put all data operation into next stage
           arrayObserable.push(Rx.Observable.of({
-            nextValue: nextOuterObjectKeys,
-            lastValue: lastOuterObjectKeys,
-            field: `OuterObjectKeysChange_${queryID}`,
+            nextValue: nextResultObjectKeys,
+            lastValue: lastResultObjectKeys,
+            field: `resultObjectKeysChange_${queryID}`,
             key
           }));
         }
-        lastOuterObjectKeys = nextOuterObjectKeys;
+        lastResultObjectKeys = nextResultObjectKeys;
         Object.keys(deletedObjectKeys).forEach((key) => {
           for (let i = 0; i < lenSelector; i++) {
             destroyRxStateByIndex(fieldArray[i], key, queryID);
@@ -491,10 +486,9 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
     .map((val) => {
       //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
-      if (field === `OuterObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-
-        Object.keys(deletedObjectKeys).forEach((key) => {
+      if (field === `resultObjectKeysChange_${queryID}`) {
+        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in deletedObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
@@ -504,8 +498,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
           } else {
             console.error("Impossible!!");
           }
-        });
-
+        }
       } else {
         // field is other 
         let index = findIndexWrapper(list, key, keyMapIndex);
@@ -514,9 +507,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
           //cl("modify index:", index);
           list = updateListWrapper(list, index, field, nextValue);
         } else {
-          if (key in lastOuterObjectKeys) {
-            list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-          }
+          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
         }
       }
       return list;
@@ -623,8 +614,8 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
       let { lastValue, nextValue, field, key } = val;
 
       // update each the child key set of Object that selected by each selector
-      //if (nextValue && typeof nextValue === 'object') {
-      if (nextValue) {
+      if (nextValue && typeof nextValue === 'object') {
+        //if (nextValue) {
         let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
         if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
           (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
@@ -661,7 +652,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
         arrayObserable.push(Rx.Observable.of({
           nextValue: nextLeftOuterObjectKeys,
           lastValue: lastLeftOuterObjectKeys,
-          field: `LeftOuterObjectKeysChange_${queryID}`,
+          field: `resultObjectKeysChange_${queryID}`,
           key
         }));
       }
@@ -680,10 +671,9 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
     .map((val) => {
       //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
-      if (field === `LeftOuterObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-
-        Object.keys(deletedObjectKeys).forEach((key) => {
+      if (field === `resultObjectKeysChange_${queryID}`) {
+        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in deletedObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
@@ -693,8 +683,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
           } else {
             console.error("Impossible!!");
           }
-        });
-
+        }
       } else {
         // field is other 
         let index = findIndexWrapper(list, key, keyMapIndex);
