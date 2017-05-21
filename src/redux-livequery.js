@@ -135,9 +135,9 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
 
       // update each the child key set of Object that selected by each selector
       if (nextValue) {
-        let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
-          (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
+        let { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
         ) {
           cl(`${field}: NO change checked.`);
           // if all child key is the same
@@ -155,13 +155,12 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
 
       let arrayObserable = [Rx.Observable.empty()];
 
-      let { andObjectKeys: _andObjectKeys } = getRelObjectKeys(indexMapObjectKeys[0], indexMapObjectKeys[0]);
-      let nextResultObjectKeys = _andObjectKeys;
+      let { innerObjectKeys: nextResultObjectKeys } = getRelObjectKeys(indexMapObjectKeys[0], indexMapObjectKeys[0]);
 
       cl(`rxQueryLeftJoin => ${queryID}: nextResultObjectKeys:`, nextResultObjectKeys, `lastResultObjectKeys:`, lastResultObjectKeys);
-      let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
+      let { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
 
-      if (Object.keys(deletedObjectKeys).length !== 0) {
+      if (Object.keys(rightObjectKeys).length !== 0) {
         // we put all data operation into next stage
         arrayObserable.push(Rx.Observable.of({
           nextValue: nextResultObjectKeys,
@@ -171,26 +170,26 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
         }));
       }
       lastResultObjectKeys = nextResultObjectKeys;
-      Object.keys(deletedObjectKeys).forEach((key) => {
+      for (const key in rightObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
           destroyRxStateByIndex(fieldArray[i], key, queryID);
         }
-      });
-      Object.keys(addedObjectkeys).forEach((key) => {
+      }
+      for (const key in leftObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
           let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
           if (obserable) {
             arrayObserable.push(obserable);
           }
         }
-      });
+      }
       return Rx.Observable.merge(...arrayObserable);
     }).map(val => {
       cl(`rxQueryLeftJoin => ${queryID}:`, " map() val:", val);
       let { nextValue, lastValue, field, key } = val;
       if (field === `resultObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in deletedObjectKeys) {
+        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in rightObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
@@ -258,9 +257,9 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
 
       // update each the child key set of Object that selected by each selector
       if (nextValue) {
-        let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
-          (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
+        let { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
         ) {
           //cl(`${field}: NO change checked.`);
           return Rx.Observable.empty();
@@ -281,14 +280,14 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
         //TODO: improve here
         let nextResultObjectKeys = indexMapObjectKeys[0];
         for (let i = 1; i < lenSelector; i++) {
-          let { andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, indexMapObjectKeys[i]);
-          nextResultObjectKeys = andObjectKeys;
+          let { innerObjectKeys } = getRelObjectKeys(nextResultObjectKeys, indexMapObjectKeys[i]);
+          nextResultObjectKeys = innerObjectKeys;
         }
 
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
         //cl(`rxQueryInnerJoin => ${queryID}: nextResultObjectKeys:`, nextResultObjectKeys, `lastResultObjectKeys:`, lastResultObjectKeys);
+        let { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
 
-        if (Object.keys(deletedObjectKeys).length !== 0) {
+        if (Object.keys(rightObjectKeys).length !== 0) {
           // we put all data operation into next stage
           arrayObserable.push(Rx.Observable.of({
             nextValue: nextResultObjectKeys,
@@ -298,19 +297,19 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
           }));
         }
         lastResultObjectKeys = nextResultObjectKeys;
-        Object.keys(deletedObjectKeys).forEach((key) => {
+        for (const key in rightObjectKeys) {
           for (let i = 0; i < lenSelector; i++) {
             destroyRxStateByIndex(fieldArray[i], key, queryID);
           }
-        });
-        Object.keys(addedObjectkeys).forEach((key) => {
+        }
+        for (const key in leftObjectKeys) {
           for (let i = 0; i < lenSelector; i++) {
             let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
             if (obserable) {
               arrayObserable.push(obserable);
             }
           }
-        });
+        }
       }
       return Rx.Observable.merge(...arrayObserable);
     })
@@ -318,8 +317,8 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
       //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
       if (field === `resultObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in deletedObjectKeys) {
+        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in rightObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
@@ -353,27 +352,25 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
   return unsub;
 }
 
-function getRelObjectKeys(nextValue = {}, lastValue = {}) {
-  let addedObjectkeys = {};   // next - last
-  let andObjectKeys = {};     // next & last
-  let deletedObjectKeys = {}; // last - next
-  if (lastValue) {
-    Object.keys(lastValue).filter((key) => (!(nextValue && (key in nextValue)))).map((key) => {
-      deletedObjectKeys[key] = true;
-    });
-  }
-  if (nextValue) {
-    Object.keys(nextValue).filter((key) => (!(lastValue && (key in lastValue)))).map((key) => {
-      addedObjectkeys[key] = true;
-    });
-  }
-  for (const key in nextValue) {
-    if (key in lastValue) {
-      andObjectKeys[key] = true;
+function getRelObjectKeys(leftValue = {}, rightValue = {}) {
+  let leftObjectKeys = {};   // next - last
+  let innerObjectKeys = {};     // next & last
+  let rightObjectKeys = {}; // last - next
+  for (const key in rightValue) {
+    if (!(key in leftValue)) {
+      rightObjectKeys[key] = true;
     }
   }
-  cl(`getRelObjectKeys():`, { deletedObjectKeys, addedObjectkeys, andObjectKeys });
-  return { deletedObjectKeys, addedObjectkeys, andObjectKeys };
+
+  for (const key in leftValue) {
+    if (key in rightValue) {
+      innerObjectKeys[key] = true;
+    } else {
+      leftObjectKeys[key] = true;
+    }
+  }
+  cl(`getRelObjectKeys():`, { leftObjectKeys, innerObjectKeys, rightObjectKeys });
+  return { leftObjectKeys, innerObjectKeys, rightObjectKeys };
 }
 
 export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
@@ -441,9 +438,9 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
 
       // update each the child key set of Object that selected by each selector
       if (nextValue) {
-        let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
-          (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
+        let { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
         ) {
           //cl(`${field}: NO change checked.`);
           return Rx.Observable.empty();
@@ -464,15 +461,13 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
         //TODO: improve here
         let nextResultObjectKeys = indexMapObjectKeys[0];
         for (let i = 1; i < lenSelector; i++) {
-          let { addedObjectkeys } = getRelObjectKeys(indexMapObjectKeys[i], nextResultObjectKeys);
-          nextResultObjectKeys = Object.assign({}, nextResultObjectKeys, addedObjectkeys);
+          let { leftObjectKeys } = getRelObjectKeys(indexMapObjectKeys[i], nextResultObjectKeys);
+          nextResultObjectKeys = Object.assign({}, nextResultObjectKeys, leftObjectKeys);
         }
         //cl("nextResultObjectKeys:", nextResultObjectKeys, ", lastResultObjectKeys:", lastResultObjectKeys);
+        let { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
 
-        let { deletedObjectKeys, addedObjectkeys, andObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
-
-        if (Object.keys(deletedObjectKeys).length !== 0) {
-
+        if (Object.keys(rightObjectKeys).length !== 0) {
           // we put all data operation into next stage
           arrayObserable.push(Rx.Observable.of({
             nextValue: nextResultObjectKeys,
@@ -482,19 +477,19 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
           }));
         }
         lastResultObjectKeys = nextResultObjectKeys;
-        Object.keys(deletedObjectKeys).forEach((key) => {
+        for (const key in rightObjectKeys) {
           for (let i = 0; i < lenSelector; i++) {
             destroyRxStateByIndex(fieldArray[i], key, queryID);
           }
-        });
-        Object.keys(addedObjectkeys).forEach((key) => {
+        }
+        for (const key in leftObjectKeys) {
           for (let i = 0; i < lenSelector; i++) {
             let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
             if (obserable) {
               arrayObserable.push(obserable);
             }
           }
-        });
+        }
       }
       return Rx.Observable.merge(...arrayObserable);
     })
@@ -502,8 +497,8 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
       //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
       if (field === `resultObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in deletedObjectKeys) {
+        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in rightObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
@@ -616,7 +611,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
 
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
-  let lastLeftOuterObjectKeys = [];
+  let lastResultObjectKeys = [];
 
   let rootObserable = [];
   for (let i = 0; i < selectorArray.length; i++) {
@@ -631,9 +626,9 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
       // update each the child key set of Object that selected by each selector
       if (nextValue) {
         //if (nextValue) {
-        let { andObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        if ((Object.keys(andObjectKeys).length === Object.keys(lastValue || {}).length) &&
-          (Object.keys(andObjectKeys).length === Object.keys(nextValue).length)
+        let { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
         ) {
           //cl(`${field}: NO change checked.`);
           // if all child key is the same
@@ -651,44 +646,41 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
       let arrayObserable = [Rx.Observable.empty()];
 
       //TODO: improve here
-      let nextLeftOuterObjectKeys = indexMapObjectKeys[0];
+      let nextResultObjectKeys = indexMapObjectKeys[0];
       for (let i = 1; i < lenSelector; i++) {
-        let { addedObjectkeys } = getRelObjectKeys(nextLeftOuterObjectKeys, indexMapObjectKeys[i]);
-        nextLeftOuterObjectKeys = addedObjectkeys;
+        let { leftObjectKeys } = getRelObjectKeys(nextResultObjectKeys, indexMapObjectKeys[i]);
+        nextResultObjectKeys = leftObjectKeys;
       }
-      //cl("nextLeftOuterObjectKeys:", nextLeftOuterObjectKeys, ", lastLeftOuterObjectKeys:", lastLeftOuterObjectKeys);
+      //cl("nextResultObjectKeys:", nextResultObjectKeys, ", lastResultObjectKeys:", lastResultObjectKeys);
+      let { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
 
-      let { addedObjectkeys, andObjectKeys, deletedObjectKeys } = getRelObjectKeys(nextLeftOuterObjectKeys, lastLeftOuterObjectKeys);
-      //cl("getRelObjectKeys():", addedObjectkeys, andObjectKeys, deletedObjectKeys);
-
-      if (Object.keys(deletedObjectKeys).length !== 0) {
-
+      if (Object.keys(rightObjectKeys).length !== 0) {
         // we put all data operation into next stage
         arrayObserable.push(Rx.Observable.of({
-          nextValue: nextLeftOuterObjectKeys,
-          lastValue: lastLeftOuterObjectKeys,
+          nextValue: nextResultObjectKeys,
+          lastValue: lastResultObjectKeys,
           field: `resultObjectKeysChange_${queryID}`,
           key
         }));
       }
-      lastLeftOuterObjectKeys = nextLeftOuterObjectKeys;
-      Object.keys(deletedObjectKeys).forEach((key) => {
+      lastResultObjectKeys = nextResultObjectKeys;
+      for (const key in rightObjectKeys) {
         destroyRxStateByIndex(fieldArray[0], key, queryID);
-      });
-      Object.keys(addedObjectkeys).forEach((key) => {
+      }
+      for (const key in leftObjectKeys) {
         let obserable = createRxStateBySelector(newSelectorArray[0](key), fieldArray[0], key, queryID);
         if (obserable) {
           arrayObserable.push(obserable);
         }
-      });
+      }
       return Rx.Observable.merge(...arrayObserable);
     })
     .map((val) => {
       //cl("map() val:", val);
       let { nextValue, lastValue, field, key } = val;
       if (field === `resultObjectKeysChange_${queryID}`) {
-        let { deletedObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in deletedObjectKeys) {
+        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in rightObjectKeys) {
           let index = findIndexWrapper(list, key, keyMapIndex);
           //cl(`${key} delete index:`, index);
           if (index >= 0) {
