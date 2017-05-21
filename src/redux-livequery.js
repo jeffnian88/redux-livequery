@@ -210,6 +210,36 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
 
   return unsub;
 }
+
+const commonListOperation = (list, keyMapIndex, queryID) => (val) => {
+  cl("map() val:", val);
+  let { nextValue, lastValue, field, key } = val;
+  if (field === `resultObjectKeysChange_${queryID}`) {
+    let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+    for (const key in rightObjectKeys) {
+      let index = findIndexWrapper(list, key, keyMapIndex);
+      //cl(`${key} delete index:`, index);
+      if (index >= 0) {
+        // delete element
+        list = deleteListWrapper(list, index, keyMapIndex);
+        //cl('del:', key, index, list);
+      } else {
+        console.error("Impossible!!");
+      }
+    }
+  } else {
+    // field is other 
+    let index = findIndexWrapper(list, key, keyMapIndex);
+    if (index >= 0) {
+      // modify element
+      //cl("modify index:", index);
+      list = updateListWrapper(list, index, field, nextValue);
+    } else {
+      list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
+    }
+  }
+  return list;
+};
 export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
@@ -300,35 +330,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map((val) => {
-      //cl("map() val:", val);
-      let { nextValue, lastValue, field, key } = val;
-      if (field === `resultObjectKeysChange_${queryID}`) {
-        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in rightObjectKeys) {
-          let index = findIndexWrapper(list, key, keyMapIndex);
-          //cl(`${key} delete index:`, index);
-          if (index >= 0) {
-            // delete element
-            list = deleteListWrapper(list, index, keyMapIndex);
-            //cl('del:', key, index, list);
-          } else {
-            console.error("Impossible!!");
-          }
-        }
-      } else {
-        // field is other 
-        let index = findIndexWrapper(list, key, keyMapIndex);
-        if (index >= 0) {
-          // modify element
-          //cl("modify index:", index);
-          list = updateListWrapper(list, index, field, nextValue);
-        } else {
-          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-        }
-      }
-      return list;
-    })
+    .map(commonListOperation(list, keyMapIndex, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -420,35 +422,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map(val => {
-      cl(`rxQueryLeftJoin => ${queryID}:`, " map() val:", val);
-      let { nextValue, lastValue, field, key } = val;
-      if (field === `resultObjectKeysChange_${queryID}`) {
-        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in rightObjectKeys) {
-          let index = findIndexWrapper(list, key, keyMapIndex);
-          //cl(`${key} delete index:`, index);
-          if (index >= 0) {
-            // delete element
-            list = deleteListWrapper(list, index, keyMapIndex);
-            //cl('del:', key, index, list);
-          } else {
-            console.error("Impossible!!");
-          }
-        }
-      } else {
-        // field is other 
-        let index = findIndexWrapper(list, key, keyMapIndex);
-        if (index >= 0) {
-          // modify element
-          //cl("modify index:", index);
-          list = updateListWrapper(list, index, field, nextValue);
-        } else {
-          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-        }
-      }
-      return list;
-    })
+    .map(commonListOperation(list, keyMapIndex, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -547,35 +521,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map((val) => {
-      //cl("map() val:", val);
-      let { nextValue, lastValue, field, key } = val;
-      if (field === `resultObjectKeysChange_${queryID}`) {
-        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in rightObjectKeys) {
-          let index = findIndexWrapper(list, key, keyMapIndex);
-          //cl(`${key} delete index:`, index);
-          if (index >= 0) {
-            // delete element
-            list = deleteListWrapper(list, index, keyMapIndex);
-            //cl('del:', key, index, list);
-          } else {
-            console.error("Impossible!!");
-          }
-        }
-      } else {
-        // field is other 
-        let index = findIndexWrapper(list, key, keyMapIndex);
-        if (index >= 0) {
-          // modify element
-          //cl("modify index:", index);
-          list = updateListWrapper(list, index, field, nextValue);
-        } else {
-          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-        }
-      }
-      return list;
-    })
+    .map(commonListOperation(list, keyMapIndex, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -669,35 +615,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map((val) => {
-      //cl("map() val:", val);
-      let { nextValue, lastValue, field, key } = val;
-      if (field === `resultObjectKeysChange_${queryID}`) {
-        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in rightObjectKeys) {
-          let index = findIndexWrapper(list, key, keyMapIndex);
-          //cl(`${key} delete index:`, index);
-          if (index >= 0) {
-            // delete element
-            list = deleteListWrapper(list, index, keyMapIndex);
-            //cl('del:', key, index, list);
-          } else {
-            console.error("Impossible!!");
-          }
-        }
-      } else {
-        // field is other 
-        let index = findIndexWrapper(list, key, keyMapIndex);
-        if (index >= 0) {
-          // modify element
-          //cl("modify index:", index);
-          list = updateListWrapper(list, index, field, nextValue);
-        } else {
-          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-        }
-      }
-      return list;
-    })
+    .map(commonListOperation(list, keyMapIndex, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
