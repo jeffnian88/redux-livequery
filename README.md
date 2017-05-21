@@ -193,9 +193,9 @@ This API will give you simple select operation.
 
 (Function): A function that unsubscribes the live query.
 
-## Example for rxQueryBasedOnObjectKeys API
+## Example for rxQueryLeftJoin API
 ```js
-import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
+import { rxQueryLeftJoin } from 'redux-livequery';
 ...
   constructor(){
     ...
@@ -205,9 +205,9 @@ import { rxQueryBasedOnObjectKeys } from 'redux-livequery';
     //state.profile={storeId1: Object3, storeId2: Object4, storeId3:Object5}
     let field0 = 'favor'; 
     let field1 = 'profile';
-    this.unsubscribe = rxQueryBasedOnObjectKeys([selector0, selector1], [field0, field1], (result) => {
+    this.unsubscribe = rxQueryLeftJoin([selector0, selector1], [field0, field1], (result) => {
       // equals SQL query:
-      // SELECT * FROM profile RIGHT JOIN favorite ON profile.id=favorite.id;
+      // SELECT * FROM profile LEFT JOIN favorite ON profile.id=favorite.id;
 
       let favoriteList = result;
       console.log(`next:`, favoriteList);

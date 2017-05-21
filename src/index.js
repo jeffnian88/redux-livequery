@@ -1,2 +1,2 @@
-export { rxQueryBasedOnObjectKeys, rxQueryLeftJoin, rxQueryInnerJoin, rxQueryOuterJoin, rxQueryFullOuterJoin, rxQueryLeftOuterJoin, rxQuerySimple } from './redux-livequery';
+export { rxQueryLeftJoin, rxQueryInnerJoin, rxQueryFullOuterJoin, rxQueryLeftOuterJoin, rxQuerySimple } from './redux-livequery';
 export { livequeryEnhancer, combineLivequery, runLivequery } from './redux-livequery';
