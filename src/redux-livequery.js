@@ -78,12 +78,12 @@ function destroyRxStateByIndex(field, key, queryID) {
 function unsubscribeRxQuery(queryID) {
   if (queryIDMapRxStates[queryID]) {
     //cl(`unsubscribeRxQuery():${queryID}`);
-    Object.keys(queryIDMapRxStates[queryID]).forEach((key) => {
+    for (const key in queryIDMapRxStates[queryID]) {
       let { unsub, subscriber } = queryIDMapRxStates[queryID][key];
       subscriber.complete();
       unsub();
       delete queryIDMapRxStates[queryID][key];
-    });
+    }
     delete queryIDMapRxStates[queryID];
     // if success
     return true;
@@ -103,7 +103,84 @@ export function livequeryEnhancer() {
   };
 }
 
-export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+
+function getRelObjectKeys(leftValue = {}, rightValue = {}) {
+  let leftObjectKeys = {};   // next - last
+  let innerObjectKeys = {};  // next & last
+  let rightObjectKeys = {};  // last - next
+  for (const key in leftValue) {
+    if (key in rightValue) {
+      innerObjectKeys[key] = true;
+    } else {
+      leftObjectKeys[key] = true;
+    }
+  }
+  for (const key in rightValue) {
+    if (!(key in leftValue)) {
+      rightObjectKeys[key] = true;
+    }
+  }
+  cl(`getRelObjectKeys():`, { leftObjectKeys, innerObjectKeys, rightObjectKeys });
+  return { leftObjectKeys, innerObjectKeys, rightObjectKeys };
+}
+
+function getNextKeyMapIndex(list, key, keyMapIndex) {
+  if (key in keyMapIndex) {
+    //let nextKeyMapIndex = Object.assign({}, keyMapIndex);
+    let nextKeyMapIndex = keyMapIndex;
+    let index = keyMapIndex[key];
+    for (let i = index + 1; i < list.length; i++) {
+      let key = list[i].key;
+      nextKeyMapIndex[key] = nextKeyMapIndex[key] - 1;
+    }
+    delete nextKeyMapIndex[key];
+    return nextKeyMapIndex;
+  }
+  return null;
+}
+function improvedFindIndexByKey(list, key, keyMapIndex) {
+  if (key in keyMapIndex) {
+    return keyMapIndex[key];
+  } else {
+    return -1;
+  }
+}
+// Find Index By Key
+function findIndexWrapper(list, key, keyMapIndex) {
+  //let index = improvedFindIndexByKey(list, key, keyMapIndex);
+  // old way to find index 
+  let index = list.findIndex((each) => key === each.key);
+
+  if (index !== improvedFindIndexByKey(list, key, keyMapIndex)) {
+    cl('improvedFindIndexByKey() not equal to findIndex().');
+  }
+  return index;
+}
+// Create
+function pushListWrapper(list, data, key, keyMapIndex) {
+  keyMapIndex[key] = list.length;
+  return update(list, { $push: [Object.assign({}, data, { key })] });
+}
+// Update
+function updateListWrapper(list, index, field, data) {
+  return update(list, { [index]: { [field]: { $set: data } } });
+}
+// Delete
+function deleteListWrapper(list, index, keyMapIndex) {
+  //function getNextKeyMapIndex(keyMapIndex, key, list) {
+  keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
+  if (keyMapIndex === null) cl('List is inconsistent with keyMapIndex');
+  return update(list, { $splice: [[index, 1]] });
+}
+
+function getUniqueQueryID() {
+  let queryID, i = 0;
+  while ((queryID = Date.now() + i) in queryIDMap) { i++; }
+  queryIDMap[queryID] = true;
+  return queryID;
+}
+
+export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
     console.error('The length of selectorArray did not match the length of fieldArray.');
@@ -112,106 +189,17 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
 
   let queryID = getUniqueQueryID();
   let unsub = () => unsubscribeRxQuery(queryID);
+  let resultObject = {};
 
-  let newSelectorArray = [];
+  let rootObserableArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
+    rootObserableArray.push(createRxStateBySelector(selectorArray[i], fieldArray[i], i, queryID));
   }
-
-  let list = [];
-  let keyMapIndex = {};
-
-  let indexMapObjectKeys = {};
-  const lenSelector = selectorArray.length;
-  let lastResultObjectKeys = [];
-
-  let rootObserable = [];
-  let fieldName = fieldArray[0];
-  rootObserable.push(createRxStateBySelector(selectorArray[0], `${fieldName}_ObjectKeysChange`, 0, queryID));
-  Rx.Observable.merge(...rootObserable)
-    .mergeMap((val) => {
-      cl(`rxQueryLeftJoin => ${queryID}:`, " mergeMap() val:", val);
-      let { lastValue, nextValue, field, key } = val;
-
-      // update each the child key set of Object that selected by each selector
-      if (nextValue) {
-        let { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
-          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
-        ) {
-          cl(`${field}: NO change checked.`);
-          // if all child key is the same
-          return Rx.Observable.empty();
-        } else {
-          indexMapObjectKeys[key] = nextValue;
-        }
-      } else {
-        // if nextValue is null or undefined
-        if (indexMapObjectKeys[key]) {
-          delete indexMapObjectKeys[key];
-        }
-      }
-      cl(`rxQueryLeftJoin => ${queryID}:`, " mergeMap() indexMapObjectKeys:", indexMapObjectKeys);
-
-      let arrayObserable = [Rx.Observable.empty()];
-
-      let { innerObjectKeys: nextResultObjectKeys } = getRelObjectKeys(indexMapObjectKeys[0], indexMapObjectKeys[0]);
-
-      cl(`rxQueryLeftJoin => ${queryID}: nextResultObjectKeys:`, nextResultObjectKeys, `lastResultObjectKeys:`, lastResultObjectKeys);
-      let { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
-
-      if (Object.keys(rightObjectKeys).length !== 0) {
-        // we put all data operation into next stage
-        arrayObserable.push(Rx.Observable.of({
-          nextValue: nextResultObjectKeys,
-          lastValue: lastResultObjectKeys,
-          field: `resultObjectKeysChange_${queryID}`,
-          key
-        }));
-      }
-      lastResultObjectKeys = nextResultObjectKeys;
-      for (const key in rightObjectKeys) {
-        for (let i = 0; i < lenSelector; i++) {
-          destroyRxStateByIndex(fieldArray[i], key, queryID);
-        }
-      }
-      for (const key in leftObjectKeys) {
-        for (let i = 0; i < lenSelector; i++) {
-          let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
-          if (obserable) {
-            arrayObserable.push(obserable);
-          }
-        }
-      }
-      return Rx.Observable.merge(...arrayObserable);
-    }).map(val => {
-      cl(`rxQueryLeftJoin => ${queryID}:`, " map() val:", val);
+  Rx.Observable.merge(...rootObserableArray)
+    .map((val) => {
       let { nextValue, lastValue, field, key } = val;
-      if (field === `resultObjectKeysChange_${queryID}`) {
-        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-        for (const key in rightObjectKeys) {
-          let index = findIndexWrapper(list, key, keyMapIndex);
-          //cl(`${key} delete index:`, index);
-          if (index >= 0) {
-            // delete element
-            list = deleteListWrapper(list, index, keyMapIndex);
-            //cl('del:', key, index, list);
-          } else {
-            console.error("Impossible!!");
-          }
-        }
-      } else {
-        // field is other 
-        let index = findIndexWrapper(list, key, keyMapIndex);
-        if (index >= 0) {
-          // modify element
-          //cl("modify index:", index);
-          list = updateListWrapper(list, index, field, nextValue);
-        } else {
-          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-        }
-      }
-      return list;
+      resultObject = update(resultObject, { [field]: { $set: nextValue } });
+      return resultObject;
     })
     .debounceTime(debounceTime)
     .subscribe({
@@ -221,8 +209,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
     });
 
   return unsub;
-};
-export const rxQueryBasedOnObjectKeys = rxQueryLeftJoin;
+}
 export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
@@ -351,29 +338,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
 
   return unsub;
 }
-
-function getRelObjectKeys(leftValue = {}, rightValue = {}) {
-  let leftObjectKeys = {};   // next - last
-  let innerObjectKeys = {};     // next & last
-  let rightObjectKeys = {}; // last - next
-  for (const key in rightValue) {
-    if (!(key in leftValue)) {
-      rightObjectKeys[key] = true;
-    }
-  }
-
-  for (const key in leftValue) {
-    if (key in rightValue) {
-      innerObjectKeys[key] = true;
-    } else {
-      leftObjectKeys[key] = true;
-    }
-  }
-  cl(`getRelObjectKeys():`, { leftObjectKeys, innerObjectKeys, rightObjectKeys });
-  return { leftObjectKeys, innerObjectKeys, rightObjectKeys };
-}
-
-export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime = 0) {
+export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
     console.error('The length of selectorArray did not match the length of fieldArray.');
@@ -382,17 +347,107 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
 
   let queryID = getUniqueQueryID();
   let unsub = () => unsubscribeRxQuery(queryID);
-  let resultObject = {};
 
-  let rootObserableArray = [];
+  let newSelectorArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    rootObserableArray.push(createRxStateBySelector(selectorArray[i], fieldArray[i], i, queryID));
+    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
   }
-  Rx.Observable.merge(...rootObserableArray)
-    .map((val) => {
+
+  let list = [];
+  let keyMapIndex = {};
+
+  let indexMapObjectKeys = {};
+  const lenSelector = selectorArray.length;
+  let lastResultObjectKeys = [];
+
+  let rootObserable = [];
+  let fieldName = fieldArray[0];
+  rootObserable.push(createRxStateBySelector(selectorArray[0], `${fieldName}_ObjectKeysChange`, 0, queryID));
+  Rx.Observable.merge(...rootObserable)
+    .mergeMap((val) => {
+      cl(`rxQueryLeftJoin => ${queryID}:`, " mergeMap() val:", val);
+      let { lastValue, nextValue, field, key } = val;
+
+      // update each the child key set of Object that selected by each selector
+      if (nextValue) {
+        let { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
+        ) {
+          cl(`${field}: NO change checked.`);
+          // if all child key is the same
+          return Rx.Observable.empty();
+        } else {
+          indexMapObjectKeys[key] = nextValue;
+        }
+      } else {
+        // if nextValue is null or undefined
+        if (indexMapObjectKeys[key]) {
+          delete indexMapObjectKeys[key];
+        }
+      }
+      cl(`rxQueryLeftJoin => ${queryID}:`, " mergeMap() indexMapObjectKeys:", indexMapObjectKeys);
+
+      let arrayObserable = [Rx.Observable.empty()];
+
+      let { innerObjectKeys: nextResultObjectKeys } = getRelObjectKeys(indexMapObjectKeys[0], indexMapObjectKeys[0]);
+
+      cl(`rxQueryLeftJoin => ${queryID}: nextResultObjectKeys:`, nextResultObjectKeys, `lastResultObjectKeys:`, lastResultObjectKeys);
+      let { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
+
+      if (Object.keys(rightObjectKeys).length !== 0) {
+        // we put all data operation into next stage
+        arrayObserable.push(Rx.Observable.of({
+          nextValue: nextResultObjectKeys,
+          lastValue: lastResultObjectKeys,
+          field: `resultObjectKeysChange_${queryID}`,
+          key
+        }));
+      }
+      lastResultObjectKeys = nextResultObjectKeys;
+      for (const key in rightObjectKeys) {
+        for (let i = 0; i < lenSelector; i++) {
+          destroyRxStateByIndex(fieldArray[i], key, queryID);
+        }
+      }
+      for (const key in leftObjectKeys) {
+        for (let i = 0; i < lenSelector; i++) {
+          let obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
+          if (obserable) {
+            arrayObserable.push(obserable);
+          }
+        }
+      }
+      return Rx.Observable.merge(...arrayObserable);
+    })
+    .map(val => {
+      cl(`rxQueryLeftJoin => ${queryID}:`, " map() val:", val);
       let { nextValue, lastValue, field, key } = val;
-      resultObject = update(resultObject, { [field]: { $set: nextValue } });
-      return resultObject;
+      if (field === `resultObjectKeysChange_${queryID}`) {
+        let { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        for (const key in rightObjectKeys) {
+          let index = findIndexWrapper(list, key, keyMapIndex);
+          //cl(`${key} delete index:`, index);
+          if (index >= 0) {
+            // delete element
+            list = deleteListWrapper(list, index, keyMapIndex);
+            //cl('del:', key, index, list);
+          } else {
+            console.error("Impossible!!");
+          }
+        }
+      } else {
+        // field is other 
+        let index = findIndexWrapper(list, key, keyMapIndex);
+        if (index >= 0) {
+          // modify element
+          //cl("modify index:", index);
+          list = updateListWrapper(list, index, field, nextValue);
+        } else {
+          list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
+        }
+      }
+      return list;
     })
     .debounceTime(debounceTime)
     .subscribe({
@@ -403,7 +458,6 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
 
   return unsub;
 }
-
 export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
@@ -531,66 +585,6 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
 
   return unsub;
 }
-
-
-function getNextKeyMapIndex(list, key, keyMapIndex) {
-  if (key in keyMapIndex) {
-    //let nextKeyMapIndex = Object.assign({}, keyMapIndex);
-    let nextKeyMapIndex = keyMapIndex;
-    let index = keyMapIndex[key];
-    for (let i = index + 1; i < list.length; i++) {
-      let key = list[i].key;
-      nextKeyMapIndex[key] = nextKeyMapIndex[key] - 1;
-    }
-    delete nextKeyMapIndex[key];
-    return nextKeyMapIndex;
-  }
-  return null;
-
-}
-function improvedFindIndexByKey(list, key, keyMapIndex) {
-  if (key in keyMapIndex) {
-    return keyMapIndex[key];
-  } else {
-    return -1;
-  }
-}
-// Find Index By Key
-function findIndexWrapper(list, key, keyMapIndex) {
-  //let index = improvedFindIndexByKey(list, key, keyMapIndex);
-  // old way to find index 
-  let index = list.findIndex((each) => key === each.key);
-
-  if (index !== improvedFindIndexByKey(list, key, keyMapIndex)) {
-    cl('improvedFindIndexByKey() not equal to findIndex().');
-  }
-  return index;
-}
-// Create
-function pushListWrapper(list, data, key, keyMapIndex) {
-  keyMapIndex[key] = list.length;
-  return update(list, { $push: [Object.assign({}, data, { key })] });
-}
-// Update
-function updateListWrapper(list, index, field, data) {
-  return update(list, { [index]: { [field]: { $set: data } } });
-}
-// Delete
-function deleteListWrapper(list, index, keyMapIndex) {
-  //function getNextKeyMapIndex(keyMapIndex, key, list) {
-  keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
-  if (keyMapIndex === null) cl('List is inconsistent with keyMapIndex');
-  return update(list, { $splice: [[index, 1]] });
-}
-
-function getUniqueQueryID() {
-  let queryID, i = 0;
-  while ((queryID = Date.now() + i) in queryIDMap) { i++; }
-  queryIDMap[queryID] = true;
-  return queryID;
-}
-
-
 export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
   // sanity-check
   if (selectorArray.length !== fieldArray.length) {
