@@ -37,7 +37,7 @@ function makeCheckFuncWithSelector(selector, cb) {
   };
 }
 
-// TODO: use Singleton Observable that can improve performance if selector function is the same path
+// TODO: use Singleton Observable that can improve performance if selector function is the same
 let rxStateIDMapObservable = {};
 
 let queryIDMapRxStates = {};
@@ -315,6 +315,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
           key
         }));
       }
+      //TODO: improve here
       lastResultObjectKeys = nextResultObjectKeys;
       for (const key in rightObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
@@ -406,6 +407,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
         }));
       }
       lastResultObjectKeys = nextResultObjectKeys;
+      // TODO: improve here
       for (const key in rightObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
           destroyRxStateByIndex(fieldArray[i], key, queryID);
@@ -506,6 +508,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
           key
         }));
       }
+      // TODO: improve here
       lastResultObjectKeys = nextResultObjectKeys;
       for (const key in rightObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
@@ -603,6 +606,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
           key
         }));
       }
+      // TODO: improve here
       lastResultObjectKeys = nextResultObjectKeys;
       for (const key in rightObjectKeys) {
         destroyRxStateByIndex(fieldArray[0], key, queryID);
