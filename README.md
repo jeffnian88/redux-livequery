@@ -15,7 +15,7 @@ Redux provide a good way to manage the state for React apps, but it lacks query/
 
 Redux-livequery can give a live query (SQL-like operation) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about to give you a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in one place.
 
-By this above approach, it helps you keep your redux state normalized structures and reducer simple (no more filter or findIndex operation, we should retrieve the data by indexing not by filtering or finding) as well.
+By this above approach, it helps you keep your redux state normalized structures and have extremely simple reducer(no more filter or findIndex operation, we should retrieve the data by indexing not by filtering or finding) as well.
 
 ## Install
 
