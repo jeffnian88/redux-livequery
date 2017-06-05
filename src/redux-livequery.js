@@ -108,6 +108,8 @@ function getRelObjectKeys(leftValue = {}, rightValue = {}) {
   let leftObjectKeys = {};   // next - last
   let innerObjectKeys = {};  // next & last
   let rightObjectKeys = {};  // last - next
+  if (!leftValue) leftValue = {};
+  if (!rightValue) rightValue = {};
   for (const key in leftValue) {
     if (key in rightValue) {
       innerObjectKeys[key] = true;
@@ -124,8 +126,9 @@ function getRelObjectKeys(leftValue = {}, rightValue = {}) {
   return { leftObjectKeys, innerObjectKeys, rightObjectKeys };
 }
 
-function getNextKeyMapIndex(list, key, keyMapIndex) {
-  if (key in keyMapIndex) {
+function getNextKeyMapIndex(list, key, keyMapIndex = {}) {
+
+  if (keyMapIndex && (key in keyMapIndex)) {
     //let nextKeyMapIndex = Object.assign({}, keyMapIndex);
     let nextKeyMapIndex = keyMapIndex;
     let index = keyMapIndex[key];
@@ -138,8 +141,8 @@ function getNextKeyMapIndex(list, key, keyMapIndex) {
   }
   return null;
 }
-function improvedFindIndexByKey(list, key, keyMapIndex) {
-  if (key in keyMapIndex) {
+function improvedFindIndexByKey(list, key, keyMapIndex = {}) {
+  if (keyMapIndex && (key in keyMapIndex)) {
     return keyMapIndex[key];
   } else {
     return -1;
