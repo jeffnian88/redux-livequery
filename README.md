@@ -2,10 +2,10 @@ Provide LiveQuery (SQL-like) to redux state container
 
 [![npm downloads](https://img.shields.io/npm/dm/redux-livequery.svg)](https://www.npmjs.com/package/redux-livequery)
 
-## Todos Live Demo and Repo using redux-livequery library
+## Todos Live Demo using redux-livequery library
 * [Todos Live Demo](https://twstorepos.firebaseapp.com)
 
-* https://github.com/jeffnian88/redux-livequery-todos-example
+* [Todos Live Demo Source code](https://github.com/jeffnian88/redux-livequery-todos-example)
 
 
 ## Motivation
