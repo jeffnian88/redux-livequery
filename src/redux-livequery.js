@@ -44,7 +44,7 @@ let rxStateIDMapObservable = {};
 
 let queryIDMapRxStates = {};
 function createRxStateBySelector(selector, field, key, queryID) {
-  let rxStateID = `${field}_${key}_${queryID}`;
+  const rxStateID = `${field}_${key}_${queryID}`;
   //if (rxStateIDMapObservable[rxStateID]) {
   if (queryIDMapRxStates[queryID] && queryIDMapRxStates[queryID][rxStateID]) {
     console.error("Shouldn't happen.", rxStateID, queryIDMapRxStates[queryID]);
@@ -59,7 +59,9 @@ function createRxStateBySelector(selector, field, key, queryID) {
       subscriber.next(val);
     });
     const unsub = store.subscribe(func);
-    queryIDMapRxStates[queryID] = Object.assign({}, queryIDMapRxStates[queryID], { [rxStateID]: { subscriber, unsub } });
+    if (!queryIDMapRxStates[queryID]) queryIDMapRxStates[queryID] = {};
+    queryIDMapRxStates[queryID][rxStateID] = { subscriber, unsub };
+    //queryIDMapRxStates[queryID] = Object.assign({}, queryIDMapRxStates[queryID], { [rxStateID]: { subscriber, unsub } });
     //cl(`queryIDMapRxStates[${queryID}]:`, queryIDMapRxStates[queryID]);
   });
 };
@@ -68,8 +70,8 @@ function destroyRxStateByIndex(field, key, queryID) {
   if (queryIDMapRxStates[queryID] && queryIDMapRxStates[queryID][rxStateID]) {
     //cl(`unsubscribe():${rxStateID}`);
     const { unsub, subscriber } = queryIDMapRxStates[queryID][rxStateID];
-    subscriber.complete();
     unsub();
+    subscriber.complete();
     delete queryIDMapRxStates[queryID][rxStateID];
     delete rxStateIDMapObservable[rxStateID];
   } else {
@@ -81,10 +83,10 @@ function unsubscribeRxQuery(queryID) {
   if (queryIDMapRxStates[queryID]) {
     //cl(`unsubscribeRxQuery():${queryID}`);
     for (const key in queryIDMapRxStates[queryID]) {
-      let { unsub, subscriber } = queryIDMapRxStates[queryID][key];
+      const { unsub, subscriber } = queryIDMapRxStates[queryID][key];
       subscriber.complete();
       unsub();
-      delete queryIDMapRxStates[queryID][key];
+      //delete queryIDMapRxStates[queryID][key];
     }
     delete queryIDMapRxStates[queryID];
     // if success
