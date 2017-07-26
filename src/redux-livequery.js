@@ -53,8 +53,8 @@ function createRxStateBySelector(selector, field, key, queryID) {
   }
   return rxStateIDMapObservable[rxStateID] = Rx.Observable.create((subscriber) => {
     cl(`subscribe():${rxStateID}`);
-    let func = makeCheckFuncWithSelector(selector, (nextValue, lastValue) => {
-      let val = { nextValue, lastValue, field, key };
+    const func = makeCheckFuncWithSelector(selector, (nextValue, lastValue) => {
+      const val = { nextValue, lastValue, field, key };
       //cl(`trigger next =>`, val);
       subscriber.next(val);
     });
@@ -64,10 +64,10 @@ function createRxStateBySelector(selector, field, key, queryID) {
   });
 };
 function destroyRxStateByIndex(field, key, queryID) {
-  let rxStateID = `${field}_${key}_${queryID}`;
+  const rxStateID = `${field}_${key}_${queryID}`;
   if (queryIDMapRxStates[queryID] && queryIDMapRxStates[queryID][rxStateID]) {
     //cl(`unsubscribe():${rxStateID}`);
-    let { unsub, subscriber } = queryIDMapRxStates[queryID][rxStateID];
+    const { unsub, subscriber } = queryIDMapRxStates[queryID][rxStateID];
     subscriber.complete();
     unsub();
     delete queryIDMapRxStates[queryID][rxStateID];
@@ -164,7 +164,12 @@ function findIndexWrapper(list, key, keyMapIndex) {
 // Create
 function pushListWrapper(list, data, key, keyMapIndex) {
   keyMapIndex[key] = list.length;
-  return update(list, { $push: [Object.assign({}, data, { key })] });
+  if (typeof data.key !== 'undefined') {
+    return update(list, { $push: [data] });
+  } else {
+    return update(list, { $push: [Object.assign({}, data, { key })] });
+  }
+
 }
 // Update
 function updateListWrapper(list, index, field, data) {
@@ -174,7 +179,7 @@ function updateListWrapper(list, index, field, data) {
 function deleteListWrapper(list, index, keyMapIndex) {
   //function getNextKeyMapIndex(keyMapIndex, key, list) {
   keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
-  if (keyMapIndex === null) cl('List is inconsistent with keyMapIndex');
+  if (keyMapIndex === null) console.error('Impossible: List is inconsistent to keyMapIndex.');
   return update(list, { $splice: [[index, 1]] });
 }
 
@@ -219,6 +224,7 @@ const commonListOperation = (list, keyMapIndex, queryID) => (val) => {
   cl("map() val:", val);
   const { nextValue, lastValue, field, key } = val;
   if (field === `resultObjectKeysChange_${queryID}`) {
+    // Object Keys Change
     const { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
     for (const key in rightObjectKeys) {
       const index = findIndexWrapper(list, key, keyMapIndex);
@@ -228,7 +234,7 @@ const commonListOperation = (list, keyMapIndex, queryID) => (val) => {
         list = deleteListWrapper(list, index, keyMapIndex);
         //cl('del:', key, index, list);
       } else {
-        console.error("Impossible!!");
+        console.error("Impossible: Can't find index.");
       }
     }
   } else {
@@ -254,9 +260,9 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
 
-  let newSelectorArray = [];
+  let childKeySelectorArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
+    childKeySelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
   }
 
   let list = [];
@@ -328,7 +334,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
       }
       for (const key in leftObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
-          const obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
+          const obserable = createRxStateBySelector(childKeySelectorArray[i](key), fieldArray[i], key, queryID);
           if (obserable) {
             arrayObserable.push(obserable);
           }
@@ -356,9 +362,9 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
 
-  let newSelectorArray = [];
+  let childKeySelectorArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
+    childKeySelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
   }
 
   let list = [];
@@ -419,7 +425,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
       }
       for (const key in leftObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
-          const obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
+          const obserable = createRxStateBySelector(childKeySelectorArray[i](key), fieldArray[i], key, queryID);
           if (obserable) {
             arrayObserable.push(obserable);
           }
@@ -447,9 +453,9 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
 
-  let newSelectorArray = [];
+  let childKeySelectorArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
+    childKeySelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
   }
 
   let list = [];
@@ -521,7 +527,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
       }
       for (const key in leftObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
-          const obserable = createRxStateBySelector(newSelectorArray[i](key), fieldArray[i], key, queryID);
+          const obserable = createRxStateBySelector(childKeySelectorArray[i](key), fieldArray[i], key, queryID);
           if (obserable) {
             arrayObserable.push(obserable);
           }
@@ -549,9 +555,9 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
 
-  let newSelectorArray = [];
+  let childKeySelectorArray = [];
   for (let i = 0; i < selectorArray.length; i++) {
-    newSelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
+    childKeySelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
   }
 
   let list = [];
@@ -616,7 +622,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
         destroyRxStateByIndex(fieldArray[0], key, queryID);
       }
       for (const key in leftObjectKeys) {
-        const obserable = createRxStateBySelector(newSelectorArray[0](key), fieldArray[0], key, queryID);
+        const obserable = createRxStateBySelector(childKeySelectorArray[0](key), fieldArray[0], key, queryID);
         if (obserable) {
           arrayObserable.push(obserable);
         }
