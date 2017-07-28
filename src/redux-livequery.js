@@ -451,6 +451,12 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
 
   const childKeySelector = (key) => (state) => selector(state)[key];
 
+
+  let lastVal = null;
+  let indexMapObjectKeys = {};
+  let lastResultObjectKeys = [];
+
+
   let list = [];
   let keyMapIndex = {};
   // initial list
@@ -459,10 +465,9 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
     keyMapIndex[key] = list.length;
     list = update(list, { $push: [{ key: key, [fieldName]: object[key] }] });
   }
+  lastVal = list;
   resultFun(list);
-
-  let indexMapObjectKeys = {};
-  let lastResultObjectKeys = [];
+  
 
   let rootObserable = [];
   rootObserable.push(createRxStateBySelector(selector, `${fieldName}_ObjectKeysChange`, 0, queryID));
@@ -522,7 +527,10 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
-        resultFun(val);
+        if (val !== lastVal) {
+          lastVal = val;
+          resultFun(val);
+        }
       }
     });
 
