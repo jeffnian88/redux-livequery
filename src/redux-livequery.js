@@ -375,6 +375,23 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
   const lenSelector = selectorArray.length;
   let lastResultObjectKeys = [];
 
+  let lastVal = null;
+  // initial list
+  const object = selectorArray[0](store.getState());
+  for (const key in object) {
+    let data = { key };
+    for (let i = 0; i < lenSelector; i++) {
+      const fieldObject = selectorArray[i](store.getState());
+      const fieldName = fieldArray[i];
+      data[fieldName] = fieldObject[key];
+    }
+    keyMapIndex[key] = list.length;
+    list = update(list, { $push: [data] });
+  }
+  lastVal = list;
+  resultFun(list);
+
+
   let rootObserable = [];
   const fieldName = fieldArray[0];
   rootObserable.push(createRxStateBySelector(selectorArray[0], `${fieldName}_ObjectKeysChange`, 0, queryID));
@@ -438,7 +455,10 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
-        resultFun(val);
+        if (val !== lastVal) {
+          lastVal = val;
+          resultFun(val);
+        }
       }
     });
 
@@ -452,13 +472,13 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
   const childKeySelector = (key) => (state) => selector(state)[key];
 
 
-  let lastVal = null;
+
   let indexMapObjectKeys = {};
   let lastResultObjectKeys = [];
 
-
   let list = [];
   let keyMapIndex = {};
+  let lastVal = null;
   // initial list
   const object = selector(store.getState());
   for (const key in object) {
@@ -467,7 +487,7 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
   }
   lastVal = list;
   resultFun(list);
-  
+
 
   let rootObserable = [];
   rootObserable.push(createRxStateBySelector(selector, `${fieldName}_ObjectKeysChange`, 0, queryID));
