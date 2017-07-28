@@ -166,16 +166,15 @@ function findIndexWrapper(list, key, keyMapIndex) {
 // Create
 function pushListWrapper(list, data, key, keyMapIndex) {
   keyMapIndex[key] = list.length;
-  if (typeof data.key !== 'undefined') {
-    return update(list, { $push: [data] });
-  } else {
-    return update(list, { $push: [Object.assign({}, data, { key })] });
-  }
-
+  return update(list, { $push: [Object.assign({}, data, { key })] });
 }
 // Update
-function updateListWrapper(list, index, field, data) {
-  return update(list, { [index]: { [field]: { $set: data } } });
+function updateListWrapper(list, index, field, nextValue) {
+  if (list[index][field] !== nextValue) {
+    return update(list, { [index]: { [field]: { $set: nextValue } } });
+  } else {
+    return list;
+  }
 }
 // Delete
 function deleteListWrapper(list, index, keyMapIndex) {
@@ -431,6 +430,90 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
           if (obserable) {
             arrayObserable.push(obserable);
           }
+        }
+      }
+      return Rx.Observable.merge(...arrayObserable);
+    })
+    .map(commonListOperation(list, keyMapIndex, queryID))
+    .debounceTime(debounceTime)
+    .subscribe({
+      next: (val) => {
+        resultFun(val);
+      }
+    });
+
+  return unsub;
+}
+export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime = 0) {
+  // sanity-check
+  const queryID = getUniqueQueryID();
+  const unsub = () => unsubscribeRxQuery(queryID);
+
+  const childKeySelector = (key) => (state) => selector(state)[key];
+
+  let list = [];
+  let keyMapIndex = {};
+  // initial list
+  const object = selector(store.getState());
+  for (const key in object) {
+    keyMapIndex[key] = list.length;
+    list = update(list, { $push: [{ key: key, [fieldName]: object[key] }] });
+  }
+  resultFun(list);
+
+  let indexMapObjectKeys = {};
+  let lastResultObjectKeys = [];
+
+  let rootObserable = [];
+  rootObserable.push(createRxStateBySelector(selector, `${fieldName}_ObjectKeysChange`, 0, queryID));
+  Rx.Observable.merge(...rootObserable)
+    .mergeMap((val) => {
+      cl(`rxQueryLeftJoin => ${queryID}:`, " mergeMap() val:", val);
+      const { lastValue, nextValue, field, key } = val;
+
+      // update each the child key set of Object that selected by each selector
+      if (nextValue) {
+        const { innerObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+        if ((Object.keys(innerObjectKeys).length === Object.keys(lastValue || {}).length) &&
+          (Object.keys(innerObjectKeys).length === Object.keys(nextValue).length)
+        ) {
+          cl(`${field}: NO change checked.`);
+          return Rx.Observable.empty();
+        } else {
+          indexMapObjectKeys[key] = nextValue;
+        }
+      } else {
+        // if nextValue is null or undefined
+        if (indexMapObjectKeys[key]) {
+          delete indexMapObjectKeys[key];
+        }
+      }
+
+      let arrayObserable = [Rx.Observable.empty()];
+
+      const { innerObjectKeys: nextResultObjectKeys } = getRelObjectKeys(indexMapObjectKeys[0], indexMapObjectKeys[0]);
+
+      cl(`rxQueryLeftJoin => ${queryID}: nextResultObjectKeys:`, nextResultObjectKeys, `lastResultObjectKeys:`, lastResultObjectKeys);
+      const { leftObjectKeys, innerObjectKeys, rightObjectKeys } = getRelObjectKeys(nextResultObjectKeys, lastResultObjectKeys);
+
+      if (Object.keys(rightObjectKeys).length !== 0) {
+        // we put all data operation into next stage
+        arrayObserable.push(Rx.Observable.of({
+          nextValue: nextResultObjectKeys,
+          lastValue: lastResultObjectKeys,
+          field: `resultObjectKeysChange_${queryID}`,
+          key
+        }));
+      }
+      lastResultObjectKeys = nextResultObjectKeys;
+      // TODO: improve here
+      for (const key in rightObjectKeys) {
+        destroyRxStateByIndex(fieldName, key, queryID);
+      }
+      for (const key in leftObjectKeys) {
+        const obserable = createRxStateBySelector(childKeySelector(key), fieldName, key, queryID);
+        if (obserable) {
+          arrayObserable.push(obserable);
         }
       }
       return Rx.Observable.merge(...arrayObserable);
