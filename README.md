@@ -44,50 +44,45 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```js
 import { rxQueryLeftJoin } from 'redux-livequery';
 ...
-  constructor(){
+  componentWillMount(){
     ...
-    let selector0 = (state) => state.favorite; // The child's key of Object selected by first selector would be major key set.
-    let selector1 = (state) => state.profile;
+    const selector0 = (state) => state.favorite; // The child's key of Object selected by first selector would be major key set.
+    const selector1 = (state) => state.profile;
     // The following is an example,
     // state.favorite = {storeId1: Object1, storeId2: Object2},
     // state.profile = {storeId1: Object3, storeId2: Object4, storeId3:Object5}
-    let field0 = 'favor'; 
-    let field1 = 'profile';
-    this.unsubscribe = rxQueryLeftJoin([selector0, selector1], [field0, field1], (result) => {
+    const field0 = 'favor'; 
+    const field1 = 'profile';
+    this.unsubscribe = rxQueryLeftJoin([selector0, selector1], [field0, field1], (favoriteList) => {
       // equals SQL query:
       // SELECT * FROM profile LEFT JOIN favorite ON profile.id=favorite.id;
 
-      let favoriteList = result;
       console.log(`next:`, favoriteList);
 
-      // result value would be [{key: storeId1, favor: {Object1}, profile: {Object3}}
+      // favoriteList value would be [{key: storeId1, favor: {Object1}, profile: {Object3}}
       //                        {key: storeId2, favor: {Object2}, profile: {Object4}}]
-
-      // this.setState({favorList:favoriteList});              //set local state
-      // or
-      // dispatch({type:'ACTION_NAME', payload:favoriteList}); // set redux state
-      // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
     });
-    componentWillUnmount(){
-      // after a while, unsubscribe the livequery
-      // exec unsubscribe when you don't need to observe the value
-      this.unsubscribe();
-    }
   }
+  componentWillUnmount(){
+    // after a while, unsubscribe the livequery
+    // exec unsubscribe when you don't need to observe the value
+    this.unsubscribe();
+  }
+
 ```
 
 ## rxQueryInnerJoin API Example
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';
 ...
-  constructor(){
+  componentWillMount(){
     ...
-    let selector0 = (state) => state.favorite;
-    let selector1 = (state) => state.profile;
+    const selector0 = (state) => state.favorite;
+    const selector1 = (state) => state.profile;
     //state.favorite={storeId1: Object1, storeId2: Object2},
     //state.profile={storeId2: Object4, storeId3:Object5}
-    let field0 = 'favor'; 
-    let field1 = 'profile';
+    const field0 = 'favor'; 
+    const field1 = 'profile';
     this.unsubscribe = rxQueryInnerJoin([selector0, selector1], [field0, field1], (result) => {
       // equals SQL query:
       // SELECT * FROM profile INNER JOIN favorite ON profile.id=favorite.id;
@@ -96,21 +91,14 @@ import { rxQueryInnerJoin } from 'redux-livequery';
 
       // result value would be [{key:storeId2, favor:{Object2}, profile:{Object4}}]
 
-      // Below here you can do whatever you want here, for example
-      // map(), filter(), reduce(), flatten()
-
-      // this.setState({...});              //set local state
-      // or
-      // dispatch({...});                   // set redux state
-
-      // whenever state.favorite or state.profile(API will dynamically subscribe) change, the result function would be invoked
     });
-    componentWillUnmount(){
-      // after a while, unsubscribe the livequery
-      // exec unsubscribe when you don't need to observe the value
-      this.unsubscribe();
-    }
   }
+  componentWillUnmount(){
+    // after a while, unsubscribe the livequery
+    // exec unsubscribe when you don't need to observe the value
+    this.unsubscribe();
+  }
+
 ```
 
 ## Usage
