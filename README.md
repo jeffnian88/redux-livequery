@@ -38,54 +38,6 @@ import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```
 
-## (Optional) Configuring The Store for Cross-component Support
-
-Now, redux-livequery can push the result value back to redux state in order to share the state with different components.
-
-```js
-import { livequeryEnhancer, runLivequery } from 'redux-livequery';
-import './livequery';
-const enhancer = compose(
-  livequeryEnhancer(),
-  ...
-  applyMiddleware(....),
-);
-...
-export const store = createStore(rootReducer, initialState || {}, enhancer);
-runLivequery(); // after createStore()
-```
-
-```js
-// file index.js  in ./livequery
-import { combineLivequery } from 'redux-livequery';
-import someQuery from './someQuery';
-const rootLivequery = combineLivequery(
-  someQuery
-);
-export default rootLivequery;
-```
-
-```js
-// someQuery.js file in ./livequery
-import { rxQuerySimple } from 'redux-livequery';
-export default function someQuery(store) {
-  console.log("someQuery()");
-  let selector0 = (state) => state.task.isComplete;
-  let selector1 = (state) => state.task.isActive;
-  rxQuerySimple([selector0, selector1], ['isComplete', 'isActive'], (completeActive) => {
-    // you can do whatever you want here
-    // ex: filter, reduce, map
-    let isCompleteNotActive = {};
-    for (let key in completeActive.isComplete) {
-      if (!(key in completeActive.isActive)) {
-        isCompleteNotActive[key] = completeActive.isComplete[key];
-      }
-    }
-    // set data into redux state
-    store.dispatch({ type: "SET_COMPLETE_NOT_ACTIVE", payload: { isCompleteNotActive } });
-  }, 0);
-}
-```
 ## Example
 
 ## rxQueryLeftJoin API Example
