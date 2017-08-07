@@ -389,7 +389,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
     list = update(list, { $push: [data] });
   }
   lastVal = list;
-  resultFun(list);
+  setImmediate(resultFun, list);
 
 
   let rootObserable = [];
@@ -486,7 +486,7 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
     list = update(list, { $push: [{ key: key, [fieldName]: object[key] }] });
   }
   lastVal = list;
-  resultFun(list);
+  setImmediate(resultFun, list);
 
 
   let rootObserable = [];
