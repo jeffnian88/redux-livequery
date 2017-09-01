@@ -489,7 +489,7 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
   let keyMapIndex = {};
   let lastVal = null;
   // initial list
-  const object = selector(store.getState());
+  const object = selector(store.getState()) || {};
   for (const key in object) {
     keyMapIndex[key] = list.length;
     list = update(list, { $push: [{ key: key, [fieldName]: object[key] }] });
@@ -683,7 +683,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
     //childKeySelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
     childKeySelectorArray[i] = makeChildKeySelectorBySelector(selectorArray[i]);
   }
-//
+  //
   childKeySelectorArray[i] = makeChildKeySelectorBySelector(selectorArray[i]);
   let list = [];
   let keyMapIndex = {};
