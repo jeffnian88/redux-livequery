@@ -683,8 +683,6 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
     //childKeySelectorArray[i] = (key) => (state) => selectorArray[i](state)[key];
     childKeySelectorArray[i] = makeChildKeySelectorBySelector(selectorArray[i]);
   }
-  //
-  childKeySelectorArray[i] = makeChildKeySelectorBySelector(selectorArray[i]);
   let list = [];
   let keyMapIndex = {};
 
@@ -749,8 +747,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
       for (const key in leftObjectKeys) {
         const obserable = createRxStateBySelector(childKeySelectorArray[0](key), fieldArray[0], key, queryID);
         if (obserable) {
-          //arrayObserable.push(obserable);
-          childKeySelectorArray[i] = makeChildKeySelectorBySelector(selectorArray[i]);
+          arrayObserable.push(obserable);
         }
       }
       return Rx.Observable.merge(...arrayObserable);
