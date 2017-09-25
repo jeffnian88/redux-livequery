@@ -44,7 +44,7 @@ export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```js
 import { rxQueryLeftJoin } from 'redux-livequery';
 ...
-  componentWillMount(){
+  componentDidMount(){
     ...
     const selector0 = (state) => state.favorite; // The child's key of Object selected by first selector would be major key set.
     const selector1 = (state) => state.profile;
@@ -75,7 +75,7 @@ import { rxQueryLeftJoin } from 'redux-livequery';
 ```js
 import { rxQueryInnerJoin } from 'redux-livequery';
 ...
-  componentWillMount(){
+  componentDidMount(){
     ...
     const selector0 = (state) => state.favorite;
     const selector1 = (state) => state.profile;
