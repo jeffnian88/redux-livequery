@@ -46,26 +46,18 @@ import { rxQueryLeftJoin } from 'redux-livequery';
 ...
   componentDidMount(){
     ...
-    const selector0 = (state) => state.favorite; // The child's key of Object selected by first selector would be major key set.
-    const selector1 = (state) => state.profile;
-    // The following is an example,
-    // state.favorite = {storeId1: Object1, storeId2: Object2},
-    // state.profile = {storeId1: Object3, storeId2: Object4, storeId3:Object5}
-    const field0 = 'favor'; 
-    const field1 = 'profile';
-    this.unsubscribe = rxQueryLeftJoin([selector0, selector1], [field0, field1], (favoriteList) => {
+    const selector0 = (state) => state.completeSet;
+    const selector1 = (state) => state.task;
+    const field0 = 'complete'; 
+    const field1 = 'task';
+    this.unsubscribe = rxQueryLeftJoin([selector0, selector1], [field0, field1], (completeTaskList) => {
       // equals SQL query:
-      // SELECT * FROM profile LEFT JOIN favorite ON profile.id=favorite.id;
-
-      console.log(`next:`, favoriteList);
-
-      // favoriteList value would be [{key: storeId1, favor: {Object1}, profile: {Object3}}
-      //                        {key: storeId2, favor: {Object2}, profile: {Object4}}]
+      // SELECT * FROM complete LEFT JOIN task ON complete.id=task.id;
+      console.log(`next:`, completeTaskList);
     });
   }
   componentWillUnmount(){
-    // after a while, unsubscribe the livequery
-    // exec unsubscribe when you don't need to observe the value
+    // unsubscribe the livequery
     this.unsubscribe();
   }
 
@@ -77,83 +69,21 @@ import { rxQueryInnerJoin } from 'redux-livequery';
 ...
   componentDidMount(){
     ...
-    const selector0 = (state) => state.favorite;
-    const selector1 = (state) => state.profile;
-    //state.favorite={storeId1: Object1, storeId2: Object2},
-    //state.profile={storeId2: Object4, storeId3:Object5}
-    const field0 = 'favor'; 
-    const field1 = 'profile';
-    this.unsubscribe = rxQueryInnerJoin([selector0, selector1], [field0, field1], (result) => {
+    const selector0 = (state) => state.completeSet;
+    const selector1 = (state) => state.activeSet;
+    const selector2 = (state) => state.task;
+    const field0 = 'complete'; 
+    const field1 = 'active';
+    const field2 = 'task';
+    this.unsubscribe = rxQueryInnerJoin([selector0, selector1, selector2], [field0, field1, field2], (completeAndActiveTaskList) => {
       // equals SQL query:
-      // SELECT * FROM profile INNER JOIN favorite ON profile.id=favorite.id;
-
-      console.log(`result:`, result);
-
-      // result value would be [{key:storeId2, favor:{Object2}, profile:{Object4}}]
-
+      // SELECT * FROM complete INNER JOIN active ON complete.id=active.id INNER JOIN task on task.id===complete.id
+      console.log(`completeAndActiveTaskList:`, completeAndActiveTaskList);
     });
   }
   componentWillUnmount(){
-    // after a while, unsubscribe the livequery
-    // exec unsubscribe when you don't need to observe the value
+    // unsubscribe the livequery
     this.unsubscribe();
   }
 
 ```
-
-## Usage
-
-#### `rxQueryLeftJoin(selectors, fields, resultFunc, debounceTime)`
-
-```js
-import { rxQueryLeftJoin } from 'redux-livequery';
-```
-
-#### Arguments
-
-1. selectors (Array): Choose the state you want to observe, the child's key of Objec selected by the first selector is primary key set.
-2. fields (Array): Give each selector a field name
-3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
-4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
-
-#### Returns
-
-(Function): A function that unsubscribes the live query.
-
-#### `rxQueryInnerJoin(selectors, fields, resultFunc, debounceTime)`
-```js
-import { rxQueryInnerJoin } from 'redux-livequery';  New API: 2017-5-6
-```
-
-This API will reactively get the intersection of the key set by scaning Object selected by each selector.
-
-The resultFunc would be invoked only on the condition intersection set is not empty (or the size of intersection is not zero) and the state you would like to observe changes.
-
-#### Arguments
-
-1. selectors (Array): Choose the state you want to observe, the selector is to select the Object that has the child key.
-2. fields (Array): Give each selector a field name
-3. resultFunc (Function): The callback to be invoked whenever any state you select changes, the result value would be composed and have the key and field that owns immutable Object.
-4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
-
-#### Returns
-
-(Function): A function that unsubscribes the live query.
-
-#### `rxQuerySimple(selectors, fields, resultFunc, debounceTime)`
-```js
-import { rxQuerySimple } from 'redux-livequery';  New API: 2017-5-6
-```
-
-This API will give you simple select operation.
-
-#### Arguments
-
-1. selectors (Array): Choose the state you want to observe, the selector is to select the Object or Array.
-2. fields (Array): Give each selector a field name
-3. resultFunc (Function): The callback to be invoked whenever any state you select changes.
-4. debounceTime (Number, Default: 0): Time(ms) to debounce the trigger of resultFunc
-
-#### Returns
-
-(Function): A function that unsubscribes the live query.
