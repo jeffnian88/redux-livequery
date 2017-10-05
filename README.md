@@ -12,17 +12,16 @@ Provide LiveQuery (SQL-like) to redux state container
 
 Redux provide a good way to manage the state for React apps, but it lacks query/aggregation operation to compose the single result value from multiple redux state(If we take redux as database, then redux should have query-like operation to react component). And in reselect, you have to manually compose your data and put yout logic in different nested functions.
 
-Redux-livequery can give you a live query (SQL-like) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about, therefore it may let you have a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in one place.
+Redux-livequery can give you a live query (SQL-like) to group values from multiple redux state together (Indeed, it decouples the direct-subscribe to redux store). It only subscribes the state you care about, therefore it could let you have a better render performance. Whenever the state you care about changes, the result function would be invoked. And then, you can put all your logic to shape the data in one place.
 
-By this approach above, it helps you keep your redux state normalized structures and have extremely simple reducer(no more filter or findIndex operation, we should retrieve the data by indexing not by filtering or finding) as well.
+By this approach above, it helps you keep your redux state normalized structures and have simpler reducer as well. In some case, we may not need to maintain two reducer function for one action (or source data).
 
 ## Install
 
 This has peer dependencies of `rxjs@5.x.x`, `redux` and `immutability-helper`, which will have to be installed as well.
 
 ```bash
-npm install --save redux-livequery
-(or yarn add redux-livequery)
+npm install --save redux-livequery (or yarn add redux-livequery)
 ```
 
 ## Configuring The Store
@@ -34,7 +33,6 @@ const enhancer = compose(
   ....
   applyMiddleware(....),
 );
-import initialState from '../reducers/initialState';
 export const store = createStore(rootReducer, initialState || {}, enhancer);
 ```
 

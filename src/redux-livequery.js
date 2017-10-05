@@ -254,10 +254,16 @@ const commonListOperation = (list, keyMapIndex, queryID) => (val) => {
 
 const makeChildKeySelectorBySelector = (selector) => (key) => (state) => {
   const object = selector(state);
-  if (object)
-    return object[key];
-  else
+  if (object) {
+    if (typeof object === 'object')
+      return object[key];
+    else {
+      console.warn('The value selected by selector should be object.');
+      return;
+    }
+  } else {
     return object;
+  }
 };
 
 export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceTime = 0) {
@@ -388,13 +394,13 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
 
   let lastVal = null;
   // initial list
-  const object = selectorArray[0](store.getState());
+  const object = selectorArray[0](store.getState()) || {};
   for (const key in object) {
     let data = { key };
     for (let i = 0; i < lenSelector; i++) {
       const fieldObject = selectorArray[i](store.getState());
       const fieldName = fieldArray[i];
-      data[fieldName] = fieldObject[key];
+      data[fieldName] = !!fieldObject && typeof fieldObject === 'object' ? fieldObject[key] : null;
     }
     keyMapIndex[key] = list.length;
     list = update(list, { $push: [data] });
