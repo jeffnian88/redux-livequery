@@ -400,7 +400,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
     for (let i = 0; i < lenSelector; i++) {
       const fieldObject = selectorArray[i](store.getState());
       const fieldName = fieldArray[i];
-      data[fieldName] = !!fieldObject && typeof fieldObject === 'object' ? fieldObject[key] : null;
+      data[fieldName] = !!fieldObject && (typeof fieldObject === 'object') ? fieldObject[key] : null;
     }
     keyMapIndex[key] = list.length;
     list = update(list, { $push: [data] });
