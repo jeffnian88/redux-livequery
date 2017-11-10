@@ -54,7 +54,9 @@ import { rxQueryLeftJoin } from 'redux-livequery';
       // equals SQL query:
       // SELECT * FROM complete LEFT JOIN task ON complete.id=task.id;
       console.log(`next:`, completeTaskList);
-    });
+    },
+    33 //debounceTime 33ms
+    );
   }
   componentWillUnmount(){
     // unsubscribe the livequery
@@ -79,7 +81,9 @@ import { rxQueryInnerJoin } from 'redux-livequery';
       // equals SQL query:
       // SELECT * FROM complete INNER JOIN active ON complete.id=active.id INNER JOIN task on task.id===complete.id
       console.log(`completeAndActiveTaskList:`, completeAndActiveTaskList);
-    });
+    },
+    33 //debounceTime 33ms
+    );
   }
   componentWillUnmount(){
     // unsubscribe the livequery

@@ -14,11 +14,14 @@ export function runLivequery() {
     each(store);
   });
 }
+
 export function combineLivequery(...queryArray) {
   queryArray.forEach((each) => {
     queries.push(each);
   });
 }
+//the fun above will be deprecated
+
 
 function makeCheckFuncWithSelector(selector, cb) {
   let currentValue = null;
@@ -130,11 +133,12 @@ function getRelObjectKeys(leftValue = {}, rightValue = {}) {
   return { leftObjectKeys, innerObjectKeys, rightObjectKeys };
 }
 
+// TODO here: improve here to find index by key
 function getNextKeyMapIndex(list, key, keyMapIndex = {}) {
-
-  if (keyMapIndex && (key in keyMapIndex)) {
-    //let nextKeyMapIndex = Object.assign({}, keyMapIndex);
-    let nextKeyMapIndex = keyMapIndex;
+  if (!!keyMapIndex && (key in keyMapIndex)) {
+    //let nextKeyMapIndex = keyMapIndex;
+    //let nextKeyMapIndex = _.cloneDeep(keyMapIndex);
+    let nextKeyMapIndex = { ...keyMapIndex };
     const index = keyMapIndex[key];
     for (let i = index + 1; i < list.length; i++) {
       const key = list[i].key;
@@ -145,6 +149,7 @@ function getNextKeyMapIndex(list, key, keyMapIndex = {}) {
   }
   return null;
 }
+
 function improvedFindIndexByKey(list, key, keyMapIndex = {}) {
   if (keyMapIndex && (key in keyMapIndex)) {
     return keyMapIndex[key];
@@ -156,8 +161,11 @@ function improvedFindIndexByKey(list, key, keyMapIndex = {}) {
 function findIndexWrapper(list, key, keyMapIndex) {
   //let index = improvedFindIndexByKey(list, key, keyMapIndex);
   // old way to find index 
+  // use traditional search methid
   const index = list.findIndex((each) => key === each.key);
 
+  // disable improve search index by key
+  // TODO: try to enable here
   if (index !== improvedFindIndexByKey(list, key, keyMapIndex)) {
     //cl('improvedFindIndexByKey() not equal to findIndex().');
   }
@@ -178,7 +186,6 @@ function updateListWrapper(list, index, field, nextValue) {
 }
 // Delete
 function deleteListWrapper(list, index, keyMapIndex) {
-  //function getNextKeyMapIndex(keyMapIndex, key, list) {
   keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
   if (keyMapIndex === null) console.error('Impossible: List is inconsistent to keyMapIndex.');
   return update(list, { $splice: [[index, 1]] });
@@ -323,7 +330,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
         return Rx.Observable.merge(...arrayObserable);
       }
 
-      //TODO: improve here
+      //TODO: any improvement here?
       let nextResultObjectKeys = indexMapObjectKeys[0];
       for (let i = 1; i < lenSelector; i++) {
         let { innerObjectKeys } = getRelObjectKeys(nextResultObjectKeys, indexMapObjectKeys[i]);
@@ -342,7 +349,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
           key
         }));
       }
-      //TODO: improve here
+      //TODO: any improvement here?
       lastResultObjectKeys = nextResultObjectKeys;
       for (const key in rightObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
@@ -452,7 +459,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
         }));
       }
       lastResultObjectKeys = nextResultObjectKeys;
-      // TODO: improve here
+      // TODO: any improvement here?
       for (const key in rightObjectKeys) {
         for (let i = 0; i < lenSelector; i++) {
           destroyRxStateByIndex(fieldArray[i], key, queryID);
@@ -546,7 +553,7 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
         }));
       }
       lastResultObjectKeys = nextResultObjectKeys;
-      // TODO: improve here
+      // TODO: any improvement here?
       for (const key in rightObjectKeys) {
         destroyRxStateByIndex(fieldName, key, queryID);
       }
@@ -628,7 +635,6 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
         return Rx.Observable.merge(...arrayObserable);
       }
 
-      //TODO: improve here
       let nextResultObjectKeys = indexMapObjectKeys[0];
       for (let i = 1; i < lenSelector; i++) {
         let { leftObjectKeys } = getRelObjectKeys(indexMapObjectKeys[i], nextResultObjectKeys);
@@ -726,7 +732,6 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
 
       let arrayObserable = [Rx.Observable.empty()];
 
-      //TODO: improve here
       let nextResultObjectKeys = indexMapObjectKeys[0];
       for (let i = 1; i < lenSelector; i++) {
         let { leftObjectKeys } = getRelObjectKeys(nextResultObjectKeys, indexMapObjectKeys[i]);
