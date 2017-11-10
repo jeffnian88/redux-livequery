@@ -36,15 +36,31 @@ function makeCheckFuncWithSelector(selector, cb) {
   return () => {
     previousValue = currentValue;
     currentValue = selector(store.getState());
+    cl('selector:', selector)
+    cl('previousValue:', previousValue);
+    cl('currentValue:', currentValue);
     if (previousValue !== currentValue) {
       cb(currentValue, previousValue);
     }
   };
 }
 
-// TODO: use Singleton Observable that can improve performance if selector function is the same
-let rxStateIDMapObservable = {};
 
+let rxStateIDMapObservable = {};
+// The reason of TODO: Try to reduce the call to store.subscribe (minimize the number of subscriber)
+// TODO: If use Singleton Observable for RxState created by selector and key
+// , then we can improve performance if the both selector function and key of RxState are the same
+// Implementation Tips:
+// 1. reference count for each RxState
+// 2. If new query need the same RxState, immediately return RxState Observable, reference count plus one
+// 3. If destroy RxState Observable, reference count minus one
+// TODO here:
+// getReferenceCountForRxState(selector, key)
+// addReferenceCountForRxState(selector, key)
+// delReferenceCountForRxState(selector, key)
+// getObservableOfRxState(selector,key) return null if non-exist, return Observable if exists
+// createRxStateBySelector, create one if getObservableOfRxState return null
+//                          return Observable if getObservableOfRxState return Observable
 let queryIDMapRxStates = {};
 function createRxStateBySelector(selector, field, key, queryID) {
   const rxStateID = `${field}_${key}_${queryID}`;
@@ -68,6 +84,11 @@ function createRxStateBySelector(selector, field, key, queryID) {
     ////cl(`queryIDMapRxStates[${queryID}]:`, queryIDMapRxStates[queryID]);
   });
 };
+// destroy Observable if getReferenceCountForRxState(selector, key) is zero
+// minus one reference count if otherwise 
+// TODO here:
+// tryDestroyRxStateObservable(selector, key, field, queryID)
+
 function destroyRxStateByIndex(field, key, queryID) {
   const rxStateID = `${field}_${key}_${queryID}`;
   if (queryIDMapRxStates[queryID] && queryIDMapRxStates[queryID][rxStateID]) {
@@ -79,9 +100,11 @@ function destroyRxStateByIndex(field, key, queryID) {
     delete rxStateIDMapObservable[rxStateID];
   } else {
     console.error("Shouldn't happen.", rxStateID, queryIDMapRxStates[queryID]);
+    console.error('Please submit the issue to https://goo.gl/m88nJV');
     return null;
   }
 }
+// try to destroy each RxState Observable in RxQuery
 function unsubscribeRxQuery(queryID) {
   if (queryIDMapRxStates[queryID]) {
     ////cl(`unsubscribeRxQuery():${queryID}`);
@@ -167,7 +190,7 @@ function findIndexWrapper(list, key, keyMapIndex) {
   // disable improve search index by key
   // TODO: try to enable here
   if (index !== improvedFindIndexByKey(list, key, keyMapIndex)) {
-    //cl('improvedFindIndexByKey() not equal to findIndex().');
+    console.warn('improvedFindIndexByKey() not equal to findIndex(). Please submit the issue to https://goo.gl/m88nJV');
   }
   return index;
 }
@@ -187,7 +210,10 @@ function updateListWrapper(list, index, field, nextValue) {
 // Delete
 function deleteListWrapper(list, index, keyMapIndex) {
   keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
-  if (keyMapIndex === null) console.error('Impossible: List is inconsistent to keyMapIndex.');
+  if (keyMapIndex === null) {
+    console.error('impossible: List is inconsistent to keyMapIndex.');
+    console.error('Please submit the issue to https://goo.gl/m88nJV');
+  }
   return update(list, { $splice: [[index, 1]] });
 }
 
@@ -243,6 +269,7 @@ const commonListOperation = (list, keyMapIndex, queryID) => (val) => {
         ////cl('del:', key, index, list);
       } else {
         console.error("Impossible: Can't find index.");
+        console.warn('Please submit the issue to https://goo.gl/m88nJV');
       }
     }
   } else {
