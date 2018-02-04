@@ -1,6 +1,6 @@
 {
   "name": "redux-livequery",
-  "version": "0.3.4rc15",
+  "version": "0.3.5rc1",
   "description": "Provide LiveQuery to react component",
   "main": "lib/cjs/index.js",
   "scripts": {

@@ -13,7 +13,7 @@ Redux provide a good way to manage the state for React apps, but it lacks query/
 Redux-livequery can give you a SQL-like live query to help you group values from multiple redux state together. And It only subscribes the state you care about, therefore it could let you have a better render performance. Whenever the state you care about changes, the result function would be invoked. (Indeed, it decouples the direct-subscribe to redux store)
 
 For example, if you have long long array(around 100~1000), when the state which you care about in array changes, the result function would be invoked, so you don't filter array for your component. By contrast, if the other states in array which you don't care about change, the result function would not be invoked. The both situiation above, you don't need filter operation in your result function (redux-livequery library use redux low level api(store.subscribe) instead).
-But in reselect, any state in array changes, the redux always will invoke your selector function and you always filter the array whether the state that you care about changes or not.
+But in reselect, any state in array changes, the redux will always invoke your selector function and you always filter the array whether the state that you care about changes or not.
 What's more, the reselect didn't provide debounce functionality to optimize your UI render frequency. In some external action trigger redux update like websocket or socket.io, you may not easily get the the high performance UX.
 
 So,redux-livequery provide debounce functionality to let you tune your UI render performance/frequency.

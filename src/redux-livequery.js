@@ -36,10 +36,10 @@ function makeCheckFuncWithSelector(selector, cb) {
   return () => {
     previousValue = currentValue;
     currentValue = selector(store.getState());
-    cl('selector:', selector)
-    cl('previousValue:', previousValue);
-    cl('currentValue:', currentValue);
+    //cl('selector:', selector)
     if (previousValue !== currentValue) {
+      //cl('previousValue:', previousValue);
+      //cl('currentValue:', currentValue);
       cb(currentValue, previousValue);
     }
   };
@@ -121,11 +121,12 @@ function unsubscribeRxQuery(queryID) {
   // if fail
   return false;
 }
-export function livequeryEnhancer() {
+let enableImprovedSearch = false;
+export function livequeryEnhancer({ enableImprovedSearch = false }) {
   return function (createStore) {
     return function (reducer, preloadedState, enhancer) {
       store = createStore(reducer, preloadedState, enhancer);
-
+      enableImprovedSearch = enableImprovedSearch;
       // do whatever you want with store object
 
       return store;
@@ -173,7 +174,8 @@ function getNextKeyMapIndex(list, key, keyMapIndex = {}) {
   return null;
 }
 
-function improvedFindIndexByKey(list, key, keyMapIndex = {}) {
+function improvedFindIndexByKey(list, key, queryID) {
+  const keyMapIndex = getKeyMapIndexByQueryID(queryID);
   if (keyMapIndex && (key in keyMapIndex)) {
     return keyMapIndex[key];
   } else {
@@ -181,23 +183,40 @@ function improvedFindIndexByKey(list, key, keyMapIndex = {}) {
   }
 }
 // Find Index By Key
-function findIndexWrapper(list, key, keyMapIndex) {
-  //let index = improvedFindIndexByKey(list, key, keyMapIndex);
-  // old way to find index 
-  // use traditional search methid
-  const index = list.findIndex((each) => key === each.key);
-
-  // disable improve search index by key
-  // TODO: try to enable here
-  if (index !== improvedFindIndexByKey(list, key, keyMapIndex)) {
-    console.warn('improvedFindIndexByKey() not equal to findIndex(). Please submit the issue to https://goo.gl/m88nJV');
+function findIndexWrapper(list, key, queryID) {
+  let index = null;
+  if (!enableImprovedSearch) {
+    // old way to find index 
+    // use traditional search methid
+    index = list.findIndex((each) => key === each.key);
+    // default disable improve search index by key
+    if (index !== improvedFindIndexByKey(list, key, queryID)) {
+      console.warn('improvedFindIndexByKey() not equal to findIndex(). Please submit the issue to https://goo.gl/m88nJV');
+    }
+  } else {
+    index = improvedFindIndexByKey(list, key, queryID);
   }
+  //cl(`findIndexWrapper(enableImprovedSearch:${enableImprovedSearch}) => queryID[${queryID}] find index:`, index);
   return index;
 }
 // Create
-function pushListWrapper(list, data, key, keyMapIndex) {
+function pushListWrapper(list, data, key, queryID) {
+  const keyMapIndex = getKeyMapIndexByQueryID(queryID);
   keyMapIndex[key] = list.length;
   return update(list, { $push: [Object.assign({}, data, { key })] });
+}
+// Delete
+function deleteListWrapper(list, index, queryID) {
+  const key = list[index].key;
+  const keyMapIndex = getKeyMapIndexByQueryID(queryID);
+  const nextKeyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
+  setKeyMapIndexByQueryID(queryID, nextKeyMapIndex);
+  if (nextKeyMapIndex === null) {
+    console.error('impossible: List is inconsistent to keyMapIndex.');
+    console.error('Please submit the issue to https://goo.gl/m88nJV');
+  }
+  //cl(`deleteListWrapper() => queryID[${queryID}] ${key} delete index:`, index);
+  return update(list, { $splice: [[index, 1]] });
 }
 // Update
 function updateListWrapper(list, index, field, nextValue) {
@@ -206,15 +225,6 @@ function updateListWrapper(list, index, field, nextValue) {
   } else {
     return list;
   }
-}
-// Delete
-function deleteListWrapper(list, index, keyMapIndex) {
-  keyMapIndex = getNextKeyMapIndex(list, list[index].key, keyMapIndex);
-  if (keyMapIndex === null) {
-    console.error('impossible: List is inconsistent to keyMapIndex.');
-    console.error('Please submit the issue to https://goo.gl/m88nJV');
-  }
-  return update(list, { $splice: [[index, 1]] });
 }
 
 function getUniqueQueryID() {
@@ -253,35 +263,48 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
 
   return unsub;
 }
+let queryIDMapKeyMapIndex = {};
+function getKeyMapIndexByQueryID(queryID) {
+  if (!queryIDMapKeyMapIndex[queryID]) {
+    queryIDMapKeyMapIndex[queryID] = {};
+  }
+  return queryIDMapKeyMapIndex[queryID];
+}
+function setKeyMapIndexByQueryID(queryID, keyMapIndex) {
+  queryIDMapKeyMapIndex[queryID] = keyMapIndex;
+}
 
-const commonListOperation = (list, keyMapIndex, queryID) => (val) => {
+const commonListOperation = (list, queryID) => (val) => {
   //cl("map() val:", val);
   const { nextValue, lastValue, field, key } = val;
-  if (field === `resultObjectKeysChange_${queryID}`) {
-    // Object Keys Change
-    const { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
-    for (const key in rightObjectKeys) {
-      const index = findIndexWrapper(list, key, keyMapIndex);
-      ////cl(`${key} delete index:`, index);
+
+  try {
+    if (field === `resultObjectKeysChange_${queryID}`) {
+      // Object Keys Change
+      const { rightObjectKeys } = getRelObjectKeys(nextValue, lastValue);
+      for (const key in rightObjectKeys) {
+        const index = findIndexWrapper(list, key, queryID);
+        if (index >= 0) {
+          // delete element of array
+          list = deleteListWrapper(list, index, queryID);
+        } else {
+          console.error("Impossible: Can't find index.");
+          console.warn('Please submit this issue to https://goo.gl/m88nJV');
+        }
+      }
+    } else {
+      // field was changed 
+      const index = findIndexWrapper(list, key, queryID);
       if (index >= 0) {
-        // delete element
-        list = deleteListWrapper(list, index, keyMapIndex);
-        ////cl('del:', key, index, list);
+        // modify element of array
+        list = updateListWrapper(list, index, field, nextValue);
       } else {
-        console.error("Impossible: Can't find index.");
-        console.warn('Please submit the issue to https://goo.gl/m88nJV');
+        // push new element of array
+        list = pushListWrapper(list, { [field]: nextValue }, key, queryID);
       }
     }
-  } else {
-    // field was changed 
-    const index = findIndexWrapper(list, key, keyMapIndex);
-    if (index >= 0) {
-      // modify element
-      ////cl("modify index:", index);
-      list = updateListWrapper(list, index, field, nextValue);
-    } else {
-      list = pushListWrapper(list, { [field]: nextValue }, key, keyMapIndex);
-    }
+  } catch (error) {
+    console.warn("error:", error);
   }
   return list;
 };
@@ -317,7 +340,6 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
   }
 
   let list = [];
-  let keyMapIndex = {};
 
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
@@ -393,7 +415,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map(commonListOperation(list, keyMapIndex, queryID))
+    .map(commonListOperation(list, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -439,6 +461,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
     keyMapIndex[key] = list.length;
     list = update(list, { $push: [data] });
   }
+  setKeyMapIndexByQueryID(queryID, keyMapIndex);
   lastVal = list;
   setImmediate(resultFun, list);
 
@@ -502,7 +525,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map(commonListOperation(list, keyMapIndex, queryID))
+    .map(commonListOperation(list, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -534,6 +557,7 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
     keyMapIndex[key] = list.length;
     list = update(list, { $push: [{ key: key, [fieldName]: object[key] }] });
   }
+  setKeyMapIndexByQueryID(queryID, keyMapIndex);
   lastVal = list;
   setImmediate(resultFun, list);
 
@@ -592,7 +616,7 @@ export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map(commonListOperation(list, keyMapIndex, queryID))
+    .map(commonListOperation(list, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -622,7 +646,6 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
   }
 
   let list = [];
-  let keyMapIndex = {};
 
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
@@ -697,7 +720,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map(commonListOperation(list, keyMapIndex, queryID))
+    .map(commonListOperation(list, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
@@ -723,7 +746,6 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
     childKeySelectorArray[i] = makeChildKeySelectorBySelector(selectorArray[i]);
   }
   let list = [];
-  let keyMapIndex = {};
 
   let indexMapObjectKeys = {};
   const lenSelector = selectorArray.length;
@@ -790,7 +812,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
       }
       return Rx.Observable.merge(...arrayObserable);
     })
-    .map(commonListOperation(list, keyMapIndex, queryID))
+    .map(commonListOperation(list, queryID))
     .debounceTime(debounceTime)
     .subscribe({
       next: (val) => {
