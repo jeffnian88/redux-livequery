@@ -1,7 +1,7 @@
 "use strict";
 import update from 'immutability-helper';
 let store = void 0;
-const Rx = require('rxjs/Rx');
+let Rx = null;
 
 let queryIDMap = {};
 
@@ -240,6 +240,7 @@ export function rxQuerySimple(selectorArray, fieldArray, resultFun, debounceTime
     console.error('The length of selectorArray did not match the length of fieldArray.');
     return null;
   }
+  if (null === Rx) Rx = require('rxjs/Rx');
 
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
@@ -329,6 +330,7 @@ export function rxQueryInnerJoin(selectorArray, fieldArray, resultFun, debounceT
     console.error('The length of selectorArray did not match the length of fieldArray.');
     return null;
   }
+  if (null === Rx) Rx = require('rxjs/Rx');
 
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
@@ -431,6 +433,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
     console.error('The length of selectorArray did not match the length of fieldArray.');
     return null;
   }
+  if (null === Rx) Rx = require('rxjs/Rx');
 
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
@@ -464,6 +467,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
   setKeyMapIndexByQueryID(queryID, keyMapIndex);
   lastVal = list;
   setImmediate(resultFun, list);
+  //resultFun(list);
 
 
   let rootObserable = [];
@@ -540,6 +544,7 @@ export function rxQueryLeftJoin(selectorArray, fieldArray, resultFun, debounceTi
 }
 export function rxQuerySingleObject(selector, fieldName, resultFun, debounceTime = 0) {
   // sanity-check
+  if (null === Rx) Rx = require('rxjs/Rx');
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
 
@@ -635,6 +640,7 @@ export function rxQueryFullOuterJoin(selectorArray, fieldArray, resultFun, debou
     console.error('The length of selectorArray did not match the length of fieldArray.');
     return null;
   }
+  if (null === Rx) Rx = require('rxjs/Rx');
 
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);
@@ -736,6 +742,7 @@ export function rxQueryLeftOuterJoin(selectorArray, fieldArray, resultFun, debou
     console.error('The length of selectorArray did not match the length of fieldArray.');
     return null;
   }
+  if (null === Rx) Rx = require('rxjs/Rx');
 
   const queryID = getUniqueQueryID();
   const unsub = () => unsubscribeRxQuery(queryID);

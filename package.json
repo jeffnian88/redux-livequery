@@ -1,11 +1,11 @@
 {
   "name": "redux-livequery",
-  "version": "0.3.5rc1",
+  "version": "0.3.7",
   "description": "Provide LiveQuery to react component",
   "main": "lib/cjs/index.js",
   "scripts": {
     "build": "babel src -d lib/cjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 0"
   },
   "peerDependencies": {
     "immutability-helper": "^2.0.0",
